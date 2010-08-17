@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
-################################################################################# Simple FritzCap python port
+################################################################################## 
+# Simple FritzCap python port
 # Simplifies generation and examination of traces taken from AVM FritzBox and/or SpeedPort
 # Traces can be examined using WireShark
 # (c) neil.young 2010 (spongebob.squarepants in http://www.ip-phone-forum.de/)
