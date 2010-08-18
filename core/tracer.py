@@ -28,6 +28,6 @@ class Tracer(threading.Thread):
     def run(self):
         try:
             urllib.urlretrieve(self.url, self.filename, self.monitor)
-            util.log('Trace stopped')
+            util.log('Trace finished server side')
         except:
             util.log('Could not open %s' % self.url)

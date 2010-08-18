@@ -218,7 +218,7 @@ class G711Decoder:
                 else:
                     # Was there a CN sequence before?
                     if sd.has_key('ts_cn'):
-                        pad = array.array('B', (0 for i in range(sd['blockalign']*(timestamp - sd['ts_cn'])))) # Silence as word typed samples
+                        pad = array.array('B', (0 for i in range(sd['blockalign']*(timestamp - sd['ts_cn'])))) # Silence
                         sd['fo'].write(pad)
                         sd['nr_samples'] += timestamp - sd['ts_cn']
                         del sd['ts_cn']

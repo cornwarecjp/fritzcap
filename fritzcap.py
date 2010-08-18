@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
-################################################################################## 
-# Simple FritzCap python port
+################################################################################# Simple FritzCap python port
 # Simplifies generation and examination of traces taken from AVM FritzBox and/or SpeedPort
 # Traces can be examined using WireShark
 # (c) neil.young 2010 (spongebob.squarepants in http://www.ip-phone-forum.de/)
@@ -41,9 +40,9 @@ def runparser():
     
 # Main
 def main():
-	
+
     global capfile
-	
+
     capture = True            # Audio debug shortcut
     extract_audio = True      # Extract audio if available
     
@@ -81,22 +80,25 @@ def main():
             except:
                 # Legacy login
                 command = urllib.urlopen(protocol + '://' + boxname + '/cgi-bin/webcm', default_login % password)
-                if command.getcode() == 200 and len(command.read()) == 0:
-                    print 'Login OK'
-                else:
-                    print "Could not login"
-                    return
+                response = command.read()
+                # Right now I don't know how to check the result of a login operation. So I just search for the errorMessage
+                if command.getcode() == 200:
+                    try:
+                        result = urllib.unquote(re.search('<p class="errorMessage">(.*?)</p>', response).group(1).decode('iso-8859-1')).replace("&nbsp;"," ")
+                    except:
+                        result = ''
+                    print 'Login attempt was made. %s' % result
                     
     
         # Create capfile folder
         folder = capfolder + '/' + (datetime.datetime.now().strftime('%d%m%Y%H%M'))
         capfile = folder + '/' + capfile
         if not os.path.exists(folder):
-        	os.makedirs(folder)
+            os.makedirs(folder)
           
         # Start tracer thread, wait for console input to stop
         Tracer(protocol + '://' + boxname + '/cgi-bin/capture_notimeout' + start, capfile).start()
-        print 'Trace started, stop with <ENTER>'
+        print 'Trace started, abandon with <ENTER>'
         raw_input()
         # Clean stop
         print 'Stopping trace'
