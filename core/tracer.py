@@ -8,8 +8,12 @@
 # based on the Windows GUI exe with same name
 ##################################################################################
 
-import threading, urllib
+import threading, urllib, ctypes, platform
 import util
+
+THREAD_SET_INFORMATION = 0x20
+THREAD_PRIORITY_ABOVE_NORMAL = 1
+
 
 ''' Tracer runs in a separate thread'''
 class Tracer(threading.Thread):
@@ -26,8 +30,18 @@ class Tracer(threading.Thread):
         self.i %= 4
                 
     def run(self):
+        if platform.system() == "Windows":
+            w32 = ctypes.windll.kernel32
+            tid = w32.GetCurrentThreadId()
+            # Raise thread priority
+            handle = w32.OpenThread(THREAD_SET_INFORMATION, False, tid)
+            result = w32.SetThreadPriority(handle, THREAD_PRIORITY_ABOVE_NORMAL)
+            w32.CloseHandle(handle)
         try:
             urllib.urlretrieve(self.url, self.filename, self.monitor)
             util.log('Trace finished server side')
         except:
             util.log('Could not open %s' % self.url)
+
+
+    
