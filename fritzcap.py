@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
-################################################################################# Simple FritzCap python port
+################################################################################# 
+# Simple FritzCap python port
 # Simplifies generation and examination of traces taken from AVM FritzBox and/or SpeedPort
 # Traces can be examined using WireShark
 # (c) neil.young 2010 (spongebob.squarepants in http://www.ip-phone-forum.de/)
@@ -45,6 +46,8 @@ def main():
 
     capture = True            # Audio debug shortcut
     extract_audio = True      # Extract audio if available
+    
+    SID = ''                  # Required later                 
     
     if capture:
         
@@ -97,12 +100,19 @@ def main():
             os.makedirs(folder)
           
         # Start tracer thread, wait for console input to stop
-        Tracer(protocol + '://' + boxname + '/cgi-bin/capture_notimeout' + start, capfile).start()
+        if SID != '':
+            Tracer(protocol + '://' + boxname + '/cgi-bin/capture_notimeout' + start + "&sid=%s" % SID, capfile).start()
+        else:
+            Tracer(protocol + '://' + boxname + '/cgi-bin/capture_notimeout' + start, capfile).start()
+            
         print 'Trace started, abandon with <ENTER>'
         raw_input()
         # Clean stop
         print 'Stopping trace'
-        urllib.urlopen(protocol + '://' + boxname + '/cgi-bin/capture_notimeout' + stop)
+        if SID != '':
+            urllib.urlopen(protocol + '://' + boxname + '/cgi-bin/capture_notimeout' + stop)
+        else:
+            urllib.urlopen(protocol + '://' + boxname + '/cgi-bin/capture_notimeout' + stop + "&sid=%s" % SID)
         print 'Capture done'
     
     # Parse the captured file
