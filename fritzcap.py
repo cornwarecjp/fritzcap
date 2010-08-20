@@ -17,9 +17,9 @@ from pcap_parse import PcapParser
 from g711_decoder import G711Decoder
 
 # Configuration (just change here) ###############################################
-boxname         = 'mr01.dnsalias.com'        # or ip (also fritz.box)
-password        = 'Test01'        # your password, adapt
-protocol        = 'http'               # or http
+boxname         = 'speedport.ip'        # or ip (also fritz.box)
+password        = 'yourpassword'        # your password, adapt
+protocol        = 'https'               # or http
 capfolder       = 'captures'            # plus subfolders according to day, month, year, hour, minute
 capfile         = 'capture.cap'         # name of capture file
 login_required  = True                  # set to 0 if no login is required
