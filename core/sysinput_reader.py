@@ -1,13 +1,13 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
-##################################################################################
+################################################################################# 
 # Simple FritzCap python port
 # Simplifies generation and examination of traces taken from AVM FritzBox and/or SpeedPort
 # Traces can be examined using WireShark
-# (c) neil.young 2010 (spongebob.squarepants in http://www.ip-phone-forum.de/)
+# (c) tom2bor 2011 (tom2bor in http://www.ip-phone-forum.de/)
 # based on the Windows GUI exe with same name
 ##################################################################################
-# Copyright (c) 2010, neil.young
+# Copyright (c) 2011, tom2bor
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -34,10 +34,42 @@
 ##################################################################################
 
 
-debug = True
+import sys
+import threading
+import Queue
+import time, random
 
-''' Capable of logging up to 15 arguments'''
-def log(*args):
-    if debug:
-        print '%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s'[:3*len(args)] % args        
-    
+import logging
+from log import Log
+
+class SytemInputFileReader(threading.Thread):
+
+    def __init__(self, decode_work_queue):
+        threading.Thread.__init__(self)
+        self._stop = threading.Event()
+        self.decode_work_queue = decode_work_queue
+
+        self.logger = Log().getLogger()
+        self.logger.debug("SytemInputFileReader(decode_work_queue:'%s')" % (decode_work_queue))
+
+    def run(self):
+        self.logger.debug("Thread started.")
+        for line in sys.stdin:
+            line = line.strip()
+            if (line):
+                self.logger.debug("Got new file to decode from system.in. Add '%s' to the decode work queue." % (line))
+                self.decode_work_queue.put(line)
+        
+        self.logger.debug("Put the last None element to the queue.")
+        self.decode_work_queue.put(None)
+
+        self._stop.set()
+        self.logger.debug("Thread stopped.")
+            
+    def stop (self):
+        self._stop.set()
+        sys.stdin.flush()
+
+    def stopped (self):
+        return self._stop.isSet()
+

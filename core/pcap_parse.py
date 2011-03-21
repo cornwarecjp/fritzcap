@@ -34,6 +34,7 @@
 ##################################################################################
 
 import struct, array
+from log import Log
 
 # http://wiki.wireshark.org/Development/LibpcapFileFormat
 # but it doesn't say something about the "modified" format as provided by FritzBox and SpeedPort....
@@ -45,6 +46,9 @@ class PcapParser:
         self.f = open(filename, 'rb')       
         self.cb = cb
         
+        self.logger = Log().getLogger()        
+        
+        
     def parse(self):
         # Read and check magic number
         # Details s.a.
@@ -52,7 +56,7 @@ class PcapParser:
         try:
             mn, = struct.unpack('<L', self.f.read(4))
         except:
-            print 'Seems, there is no valid PCAP file'
+            self.logger.error('Seems, there is no valid PCAP file')
             return -1
         if mn == 0xa1b2c3d4 or mn == 0xa1b2cd34:        # Default or modified libpcap 
             # Little endian
@@ -65,7 +69,7 @@ class PcapParser:
             if mn == 0x34cdb2a1:
                 modified = 1
         else:
-            print 'Invalid PCAP dump header. Probably not a valid capture file'
+            self.logger.error('Invalid PCAP dump header. Probably not a valid capture file')
             return -1
         
         # Read the rest of the dumpheader   

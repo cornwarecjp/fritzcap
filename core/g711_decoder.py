@@ -34,7 +34,9 @@
 ##################################################################################
 
 import struct, datetime, array
-import util
+
+from log import Log
+
 
 ''' Class strips G.711 audio RTP streams from a PCAP file and extracts the audio to separate streams, mixes on demand '''
 class G711Decoder:
@@ -127,14 +129,18 @@ class G711Decoder:
            56,    48,    40,    32,    24,    16,     8,     0                
     ])
 
-    # Stream descriptor array
-    sda = []
 
     ''' Constructor '''
     def __init__(self, capfile, mix=1, linearize=1):
         self.mix = mix
         self.file = capfile.split('.')[0]
-        self.linearize = linearize             
+        self.linearize = linearize
+
+        # Stream descriptor array
+        self.sda = []       
+ 
+        self.logger = Log().getLogger()
+         
     
     ''' Write RIFF header '''
     def write_RIFF_header(self, sd):
@@ -189,7 +195,7 @@ class G711Decoder:
                 
                 # Probably we need some more assertions here, but up to now it worked well
                 if payloadtype not in [8, 0, 13]:
-                    util.log('Unsupported payload type', payloadtype)
+                    self.logger.debug('Unsupported payload type %s' % payloadtype)
                     return
                 
                 # Find the SSI of current stream in stream descriptor array. If not contained, allocate a slot and add it
@@ -295,10 +301,10 @@ class G711Decoder:
 
                             # Check: Input linearized already?    
                             if not self.linearize:
-                                print "Can't mix streams that are not linearized"
+                                self.logger.error("Can't mix streams that are not linearized")
                                 break
     
-                            util.log("Streams %d (ssi=%d) and %d (ssi=%d) are belonging together" % (sd["index"], sd['ssi'], sdother['index'], sdother['ssi']))
+                            self.logger.debug("Streams %d (ssi=%d) and %d (ssi=%d) are belonging together" % (sd["index"], sd['ssi'], sdother['index'], sdother['ssi']))
                             
                             # Calculate deltaT between both streams
                             timediff = abs(sd['first_seen_at']-sdother['first_seen_at'])
@@ -314,7 +320,7 @@ class G711Decoder:
     
                             total_samples = follower_samples_behind + max(leader['nr_samples'] - follower_samples_behind, follower['nr_samples'])
                             
-                            util.log("Stream %d is %s h behind stream %d (delta=%d samples). Total samples: %d" % (follower['index'], timediff, leader['index'], follower_samples_behind, total_samples))
+                            self.logger.debug("Stream %d is %s h behind stream %d (delta=%d samples). Total samples: %d" % (follower['index'], timediff, leader['index'], follower_samples_behind, total_samples))
                             
                             # Open mix file
                             sdmix = {'channels':1, 'samplerate':8000, 'format':1, 'bitspersample':16, 'blockalign':2, 'nr_samples':total_samples}
@@ -325,7 +331,7 @@ class G711Decoder:
                             leader['fo'].seek(58, 0)
                             follower['fo'].seek(58, 0)
 
-                            util.log("leader: %d, follower: %d, total: %d, follower_behind: %d" % (leader['nr_samples'], follower['nr_samples'], total_samples, follower_samples_behind))                            
+                            self.logger.debug("leader: %d, follower: %d, total: %d, follower_behind: %d" % (leader['nr_samples'], follower['nr_samples'], total_samples, follower_samples_behind))                            
 
                             # Write trailing overhead from leader first
                             sdmix['fo'].write(leader['fo'].read(leader['blockalign']*follower_samples_behind))
@@ -335,7 +341,7 @@ class G711Decoder:
                             # Calculate the count of samples which have to be mixed from both sources                        
                             mixed_cnt = min(leader['nr_samples'] - follower_samples_behind, follower['nr_samples'])
     
-                            util.log("Mixed samples count: %d" % mixed_cnt)
+                            self.logger.debug("Mixed samples count: %d" % mixed_cnt)
                             
                             # Mix it, save it
                             for sample in range(0, mixed_cnt):
@@ -363,15 +369,15 @@ class G711Decoder:
                                 tmp = leader['fo'].read(leader['blockalign']*leader_rest)
                                 sdmix['fo'].write(tmp)
                                 total_samples_written += leader_rest
-                                util.log("Rest taken from leader: %d" % leader_rest)
+                                self.logger.debug("Rest taken from leader: %d" % leader_rest)
                             else:
                                 if follower_rest:
                                     tmp = follower['fo'].read(follower['blockalign']*follower_rest)
                                     sdmix['fo'].write(tmp)
                                     total_samples_written += follower_rest
-                                    util.log("Rest taken from follower: %d" % follower_rest)
+                                    self.logger.debug("Rest taken from follower: %d" % follower_rest)
                             sdmix['fo'].close()
                             duration_in_seconds = int((total_samples_written * 125) / 1000000.0)
-                            util.log("Total mixed samples written: %d (duration %s h)" % (total_samples_written,  str(datetime.time(duration_in_seconds // 3600, (duration_in_seconds % 3600) // 60, duration_in_seconds % 60))))
+                            self.logger.debug("Total mixed samples written: %d (duration %s h)" % (total_samples_written,  str(datetime.time(duration_in_seconds // 3600, (duration_in_seconds % 3600) // 60, duration_in_seconds % 60))))
             # Close
             sd['fo'].close()

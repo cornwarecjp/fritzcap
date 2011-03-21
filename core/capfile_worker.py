@@ -1,13 +1,13 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
-##################################################################################
+################################################################################# 
 # Simple FritzCap python port
 # Simplifies generation and examination of traces taken from AVM FritzBox and/or SpeedPort
 # Traces can be examined using WireShark
-# (c) neil.young 2010 (spongebob.squarepants in http://www.ip-phone-forum.de/)
+# (c) tom2bor 2011 (tom2bor in http://www.ip-phone-forum.de/)
 # based on the Windows GUI exe with same name
 ##################################################################################
-# Copyright (c) 2010, neil.young
+# Copyright (c) 2011, tom2bor
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,42 +33,56 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##################################################################################
 
-import threading, urllib, ctypes, platform
 
+import sys
+import threading
+import Queue
+import time, random
+
+import logging
 from log import Log
+from pcap_parse import PcapParser
+from g711_decoder import G711Decoder
 
-THREAD_SET_INFORMATION = 0x20
-THREAD_PRIORITY_ABOVE_NORMAL = 1
-
-
-''' Tracer runs in a separate thread'''
-class Tracer(threading.Thread):
-    def __init__(self, url, filename):
-        self.url = url
-        self.i = 0
-        self.filename = filename
+class CapfileWorker(threading.Thread):
+    
+    def __init__(self, worker_id, decode_work_queue):
         threading.Thread.__init__(self)
-        
-        self.logger = Log().getLogger()
- 
-    def monitor(self, n1, n2, n3):
-        # n1: running number, n2: chunk size, n3: file size or -1 if unknown
-        #print ["|", "/", "-", "\\"][self.i], "\r",
-        self.i += 1
-        self.i %= 4
-                
-    def run(self):
-        if platform.system() == "Windows":
-            w32 = ctypes.windll.kernel32
-            tid = w32.GetCurrentThreadId()
-            # Raise thread priority
-            handle = w32.OpenThread(THREAD_SET_INFORMATION, False, tid)
-            result = w32.SetThreadPriority(handle, THREAD_PRIORITY_ABOVE_NORMAL)
-            w32.CloseHandle(handle)
-        try:
-            self.logger.debug("Trace started  (url:'%s', filename:'%s')" % (self.url, self.filename))
-            urllib.urlretrieve(self.url, self.filename, self.monitor)
-            self.logger.debug("Trace finished (url:'%s', filename:'%s')" % (self.url, self.filename))
-        except:
-            self.logger.debug("Could not open Trace (url:'%s', filename:'%s')" % (self.url, self.filename))
+        self.decode_work_queue = decode_work_queue
+        self.worker_id = worker_id
+        self._stop = threading.Event()
 
+        self.logger = Log().getLogger()
+        self.logger.debug("CapfileWorker(worker_id:%s, decode_work_queue:%s)." % (worker_id, decode_work_queue))
+
+    def run(self):
+        self.logger.debug("Thread started.")
+        while not self._stop.isSet():
+            try:
+                filename = self.decode_work_queue.get()
+                if (filename is None):
+                    self.logger.debug("Became None element, put a None element to the queue for the others workers and break the work.")
+                    self.decode_work_queue.put(None)
+                    break
+                                
+                self.process(filename)
+            finally:
+                self.decode_work_queue.task_done()
+                
+        self._stop.set()
+        self.logger.debug("Thread stopped.")
+
+    def process(self, filename):
+        self.logger.info("Decode process started  (worker_id:%s, file:'%s')" % (self.worker_id,filename))
+        g711 = G711Decoder(filename, mix=1, linearize=1)
+        PcapParser(filename, g711.decode).parse()
+        g711.finalize()        
+        self.logger.info("Decode process finished (worker_id:%s, file:'%s')" % (self.worker_id,filename))
+
+    def stop (self):
+        self.logger.debug("Received signal to stop the thread.")
+        self._stop.set()
+        self.decode_work_queue.put(None)
+
+    def stopped (self):
+        return self._stop.isSet()

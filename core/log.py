@@ -1,13 +1,13 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
-##################################################################################
+################################################################################# 
 # Simple FritzCap python port
 # Simplifies generation and examination of traces taken from AVM FritzBox and/or SpeedPort
 # Traces can be examined using WireShark
-# (c) neil.young 2010 (spongebob.squarepants in http://www.ip-phone-forum.de/)
+# (c) tom2bor 2011 (tom2bor in http://www.ip-phone-forum.de/)
 # based on the Windows GUI exe with same name
 ##################################################################################
-# Copyright (c) 2010, neil.young
+# Copyright (c) 2011, tom2bor
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,42 +33,55 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##################################################################################
 
-import threading, urllib, ctypes, platform
+import logging
+import logging.config
 
-from log import Log
+class Log:
+    global logger
+    """ A python logging singleton """
 
-THREAD_SET_INFORMATION = 0x20
-THREAD_PRIORITY_ABOVE_NORMAL = 1
+    class __impl:
+        """ Implementation of the singleton interface """
 
+        def spam(self):
+            """ Test method, return singleton id """
+            return id(self)
 
-''' Tracer runs in a separate thread'''
-class Tracer(threading.Thread):
-    def __init__(self, url, filename):
-        self.url = url
-        self.i = 0
-        self.filename = filename
-        threading.Thread.__init__(self)
+    # storage for the instance reference
+    __instance = None
+
+    def __init__(self):
+        """ Create singleton instance """
+        # Check whether we already have an instance
+        if Log.__instance is None:
+            # Create and remember instance
+            Log.__instance = Log.__impl()
+
+        # Store instance reference as the only member in the handle
+        self.__dict__['_Log__instance'] = Log.__instance
         
-        self.logger = Log().getLogger()
- 
-    def monitor(self, n1, n2, n3):
-        # n1: running number, n2: chunk size, n3: file size or -1 if unknown
-        #print ["|", "/", "-", "\\"][self.i], "\r",
-        self.i += 1
-        self.i %= 4
-                
-    def run(self):
-        if platform.system() == "Windows":
-            w32 = ctypes.windll.kernel32
-            tid = w32.GetCurrentThreadId()
-            # Raise thread priority
-            handle = w32.OpenThread(THREAD_SET_INFORMATION, False, tid)
-            result = w32.SetThreadPriority(handle, THREAD_PRIORITY_ABOVE_NORMAL)
-            w32.CloseHandle(handle)
-        try:
-            self.logger.debug("Trace started  (url:'%s', filename:'%s')" % (self.url, self.filename))
-            urllib.urlretrieve(self.url, self.filename, self.monitor)
-            self.logger.debug("Trace finished (url:'%s', filename:'%s')" % (self.url, self.filename))
-        except:
-            self.logger.debug("Could not open Trace (url:'%s', filename:'%s')" % (self.url, self.filename))
+        logger = logging.getLogger()
 
+    def file_config(self, fname):
+        # create logger
+        logging.config.fileConfig(fname)
+        self.__instance.logger = logging.getLogger()
+        
+    def getLogger(self):
+        return self.__instance.logger
+        
+    def debug(self, msg):
+        self.__instance.logger.debug(msg)
+        
+    def info(self, msg):
+        self.__instance.logger.info(msg)
+        
+    def warning(self, msg):
+        self.__instance.logger.warning(msg)
+        
+    def error(self, msg):
+        self.__instance.logger.error(msg)
+        
+    def critical(self, msg):
+        self.__instance.logger.critical(msg)
+        
