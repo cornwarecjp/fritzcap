@@ -153,46 +153,46 @@ class CaptureMonitor(threading.Thread):
         else:
             self._stop.set()
         self.logger.debug("Thread stopped.")
-            
+
+
+
     def init_login(self):
         try:
             self.logger.debug("Login attempt to the the FritzBox (box_name:%s)" % (self.box_name))
-            
+
             # Try to get a session id SID
-            conn_url = self.protocol + '://' +  self.box_name + '/cgi-bin/webcm?' + self.sid_challenge
+            conn_url = 'http://fritz.box/login_sid.lua'
             self.logger.debug("Call the challange token url (url:'%s')" % conn_url)
             self.sid = urllib.urlopen(conn_url)
-            if self.sid.getcode() == 200:          
+            if self.sid.getcode() == 200:
                 # Read and parse the response in order to get the challenge (not a full blown xml parser)
                 readed_chalange_str = self.sid.read()
                 challenge = re.search('<Challenge>(.*?)</Challenge>', readed_chalange_str).group(1)
-                
+
                 # Create a UTF-16LE string from challenge + '-' + password, non ISO-8859-1 characters will except here (e.g. EUR)
                 challenge_bf = (challenge + '-' + self.password).decode('iso-8859-1').encode('utf-16le')
-                
+
                 # Calculate the MD5 hash
                 m = hashlib.md5()
                 m.update(challenge_bf)
-        
-                # Make a byte response string from challenge + '-' + md5_hex_value 
+
+                # Make a byte response string from challenge + '-' + md5_hex_value
                 response_bf = challenge + '-' + m.hexdigest().lower()
-                
+
                 # Answer the challenge
-                conn_url = (self.protocol + '://' + self.box_name + '/cgi-bin/webcm')
+                conn_url = 'http://fritz.box/login_sid.lua?username=root&response=' + response_bf
                 self.logger.debug("Call the read seed token url (url:'%s', data:'%s')." % (conn_url,self.sid_login % response_bf))
-                login = urllib.urlopen(conn_url, self.sid_login % response_bf)
+                login = urllib.urlopen(conn_url)
 
                 if login.getcode() == 200:
                     readed_login_str = login.read()
                     self.SID = re.search('<SID>(.*?)</SID>', readed_login_str).group(1)
-                    is_authorised = int(re.search('<iswriteaccess>(\d)</iswriteaccess>', readed_login_str).group(1))
-                    
-                    if (is_authorised):
-                        self.logger.debug("Login OK (SID: %s)" % self.SID)
-                        return True
-                    else:
+                    if (self.SID == '0000000000000000'):
                         self.logger.error("Could not login to the FritzBox: Not authorized.")
-                        
+                    else:
+                        self.logger.debug("Login OK (SID: %s)" % self.SID)
+                    return True
+
                 else:
                     self.logger.error("Could not login to the FritzBox: Unknown error")
             else:
@@ -208,8 +208,8 @@ class CaptureMonitor(threading.Thread):
                 except:
                     result = ''
                 self.logger.error('Login attempt was made, but something was wrong: %s' % result)
-        return False
-    
+        return False 
+
     def init_capture_file(self):
         # Create capfile folder
         folder = StringHelper.parse_string(self.cap_folder, self.data_map)
