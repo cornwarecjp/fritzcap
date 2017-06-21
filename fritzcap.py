@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
-################################################################################# 
+#################################################################################
 # Extention to the simple FritzCap python port
 # Simplifies generation and examination of traces taken from AVM FritzBox and/or SpeedPort
 # Traces can be examined using WireShark
@@ -70,14 +70,14 @@ def signal_handler(signum, stack):
     global still_working
     still_working = False
 
-    for thread in all_threads:        
+    for thread in all_threads:
         logger.debug("Call stop method to the thread:'%s'" % (thread))
         thread.stop()
         logger.debug("Call join signal to the thread:'%s'" % (thread))
         thread.join()
 
     logger.debug("Become signal from the system (signum:'%s', stack:'%s') finished." % (signum,stack))
-    
+
 
 if __name__ == '__main__':
     # tstart: time of program start
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     # dialed: the dialed number/name
     # acalls: active calls number
     # lineport: the used line port name (SIP0,SIP1,etc.)
-    
+
     global data_map
     data_map = {}
     data_map['tstart'] = datetime.datetime.now()
@@ -102,14 +102,14 @@ if __name__ == '__main__':
     data_map['tdisc'] = datetime.datetime(1900,1,1)
     data_map['tcaps'] = datetime.datetime(1900,1,1)
     data_map['tcape'] = datetime.datetime(1900,1,1)
-    
+
 #    data_str = 'captures/%(tcall.Ymd)-%(tcall.m)-%(tcall.d)/%(tcall.H)%(tcall.M)_%(call.name)s/'
 #    value_str = StringHelper.parse_string(data_str, data_map)
 
     global logger
     global all_threads
     global work_queue
-        
+
     work_queue = None
     all_threads = []
 
@@ -120,12 +120,13 @@ if __name__ == '__main__':
     main_args = parser.add_argument_group('main arguments')
     ext_args = parser.add_argument_group('extended defaults arguments')
 
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 2.0')
-    
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 2.1')
+
     main_args.add_argument('-c', '--capture_files', default=None, action='store_true', help='capture file/s. If the monitor option is not set, only one file will be captured')
     main_args.add_argument('-d', '--decode_files', nargs='*', metavar='file', type=str, help='the list of captured files to decode. All the new captures files will be decode automatically if the --capture switch is set. Read the files from the standard input if the list of files is empty and there is no capture work.')
     main_args.add_argument('-m', '--monitor_calls', default=None, action='store_true', help='start the call monitor mode. The CALL/RING/DISCONNECT events will be used to start/stop the capture automatically')
     main_args.add_argument('-p', '--password', default=None, metavar='password', type=str, help='the password to login to the box. If not set and --use_password is set to True, than the password will be read from the console')
+    main_args.add_argument('-u', '--username', default='root', metavar='username', type=str, help='the username to login to the box. If not set and --use_password is set to True, than the username will be root')
 
     ext_args.add_argument('--config_file', default='fritzcap.conf', metavar='path_to_file', type=file, help='the fritzcap configuration file (Default:\'fritzcap.conf\')')
     ext_args.add_argument('--logging_config', default=None, metavar='path_to_file', type=str, help='the fritzcap logging configuration file (Default:\'logging.conf\')')
@@ -148,6 +149,7 @@ if __name__ == '__main__':
                 "decode_files": None,
                 "monitor_calls": False,
                 "password": None,
+                "username": "root",
                 "logging_config": "logging.conf",
                 "box_name": "fritz.box",
                 "call_service_port": 1012,
@@ -170,10 +172,10 @@ if __name__ == '__main__':
         value = None
         if (args.__contains__(key)):
             value = args.__getattribute__(key)
-                
+
         if value is None and config.has_option("settings", key) and config.get("settings", key):
             value = config.get("settings", key)
-        
+
         if value is None and default_value:
             value = default_value
 
@@ -181,52 +183,52 @@ if __name__ == '__main__':
 
     login_required  = not args.login_not_required
     nothing_to_do   = True # will be set to False if at least one action will be executed
-    
-    
+
+
     ###################################################
     ### read the dictionary data from config file   ###
     ###################################################
     for (pbook_number, pbook_name) in config.items("phone_book"):
         data_map["pbook_number."+pbook_number]=pbook_name
         data_map["pbook_name."+pbook_name]=pbook_number
-    
-    
+
+
     ######################################
     ### init logger service            ###
-    ######################################    
+    ######################################
     Log().file_config(args.logging_config)
-    logger = Log().getLogger()        
+    logger = Log().getLogger()
 
     # print out debug data
-    logger.info("FritzCap started.")
+    logger.info("FritzCap 2.1 started.")
     if (logger.isEnabledFor(logging.DEBUG)):
         logger.debug("Command line parameters: " + str(sys.argv))
-        logger.debug("Parsed parameters:       " + str(args))    
-    
-    
+        logger.debug("Parsed parameters:       " + str(args))
+
+
     # take the password data from the command line
     if args.capture_files and args.password is None and login_required:
         if (platform.system() == "Windows"):
             signal.signal(signal.SIGINT, signal_handler)
-            args.password = getpass.win_getpass("Exter the FritzBox password:")
+            args.password = getpass.win_getpass("Enter the FritzBox password:")
         elif (platform.system() == "Linux"):
             signal.signal(signal.SIGINT, signal_handler)
-            args.password = getpass.unix_getpass("Exter the FritzBox password:")    
-            
+            args.password = getpass.unix_getpass("Enter the FritzBox password:")
+
     ######################################
     ### init decode workers service    ###
     ######################################
     if (args.decode_files is not None):
         nothing_to_do = False
-        work_queue = Queue.Queue(0)     
-        
+        work_queue = Queue.Queue(0)
+
         if (args.decode_workers_count < 1):
             logger.warning("The workers count is '< 1' now and will be set to '1'. At least 1 worker have to be active to do decode work.")
             args.decode_workers_count = 1
-            
+
         for i in range(args.decode_workers_count):
             all_threads.insert(0, CapfileWorker(i, work_queue)) # create a worker
-        
+
         if (len(args.decode_files) > 0):
             # there is at least one file to decode throw the command line parameter.
             # Decode all the files
@@ -234,20 +236,20 @@ if __name__ == '__main__':
                 work_queue.put(file)
             if (not args.monitor_calls and not args.capture_files):
                 # put the last queue item if the monitor option is not activated
-                work_queue.put(None)            
+                work_queue.put(None)
         elif (not args.monitor_calls and not args.capture_files):
             # read the files to decode from system.in,
             # because there are no files given throw the command line
             # and monitor mode is not used
             all_threads.insert(0, SytemInputFileReader(work_queue));
-    
+
     ######################################
     ### init capture monitor service   ###
     ######################################
     capture_monitor = None
     if (args.capture_files):
         nothing_to_do = False
-        capture_monitor = CaptureMonitor(work_queue, data_map, args.box_name, args.password, args.protocol, args.cap_folder, args.cap_file, login_required, args.default_login, args.sid_challenge, args.sid_login, args.start_str, args.stop_str, args.after_capture_time)
+        capture_monitor = CaptureMonitor(work_queue, data_map, args.box_name, args.username, args.password, args.protocol, args.cap_folder, args.cap_file, login_required, args.default_login, args.sid_challenge, args.sid_login, args.start_str, args.stop_str, args.after_capture_time)
         all_threads.insert(0, capture_monitor)
 
     ######################################
@@ -268,7 +270,7 @@ if __name__ == '__main__':
         for thread in all_threads:
             thread.start()
             time.sleep(0.1) #wait 100 milliseconds
-        
+
         signal.signal(signal.SIGINT, signal_handler)
         while (still_working):
             try:
@@ -284,4 +286,3 @@ if __name__ == '__main__':
             except IOError:
                 a = 1 # just do nothing
     logger.info("FritzCap finished.")
-    

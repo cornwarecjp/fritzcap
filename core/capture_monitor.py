@@ -53,14 +53,14 @@ class CaptureMonitor(threading.Thread):
     next_stop_time = 0
     next_start_time = 0
     cap_file_path = ""
-
-    def __init__(self, decode_work_queue, data_map, box_name, password, protocol, cap_folder, cap_file, login_required, default_login, sid_challenge, sid_login, start_str, stop_str, after_capture_time):
+    def __init__(self, decode_work_queue, data_map, box_name, username, password, protocol, cap_folder, cap_file, login_required, default_login, sid_challenge, sid_login, start_str, stop_str, after_capture_time):
         threading.Thread.__init__(self)
         self._stop = threading.Event()
 
         self.decode_work_queue = decode_work_queue
         self.data_map = data_map
         self.box_name = box_name
+        self.username = username
         self.password = password
         self.protocol = protocol
         self.cap_folder = cap_folder
@@ -77,7 +77,7 @@ class CaptureMonitor(threading.Thread):
         self.wait_condition = threading.Condition()
 
         self.logger = Log().getLogger()
-        self.logger.debug("CaptureMonitor(decode_work_queue:'%s', data_map:'%s', box_name:'%s', password:'%s', protocol:'%s', cap_folder:'%s', cap_file:'%s', login_required:'%s', default_login:'%s', sid_challenge:'%s', sid_login:'%s', start_str:'%s', stop_str:'%s', after_capture_time:'%s')" % (decode_work_queue,data_map,box_name,password,protocol,cap_folder,cap_file,login_required,default_login,sid_challenge,sid_login,start_str,stop_str,after_capture_time))
+        self.logger.debug("CaptureMonitor(decode_work_queue:'%s', data_map:'%s', box_name:'%s', username:'%s', password:'%s', protocol:'%s', cap_folder:'%s', cap_file:'%s', login_required:'%s', default_login:'%s', sid_challenge:'%s', sid_login:'%s', start_str:'%s', stop_str:'%s', after_capture_time:'%s')" % (decode_work_queue,data_map,box_name,username,password,protocol,cap_folder,cap_file,login_required,default_login,sid_challenge,sid_login,start_str,stop_str,after_capture_time))
 
     def run(self):
         self.logger.debug("Thread started.")
@@ -91,7 +91,7 @@ class CaptureMonitor(threading.Thread):
             ###################
             ### pre_capture ###
             ###################
-            # Wait until start_capture coomand was started...
+            # Wait until start_capture command was started...
             self.logger.debug("pre_capture acquire lock.")
             self.wait_condition.acquire()
             self.logger.debug("pre_capture acquire lock finished.")
@@ -164,7 +164,9 @@ class CaptureMonitor(threading.Thread):
             conn_url = self.protocol + '://' + self.box_name + '/login_sid.lua'
             self.logger.debug("Call the challange token url (url:'%s')" % conn_url)
             self.sid = urllib.urlopen(conn_url)
-            if self.sid.getcode() == 200:
+            sid_http_result = self.sid.getcode()
+            self.logger.debug("SID HTTP result:%s" % sid_http_result)
+            if sid_http_result == 200:
                 # Read and parse the response in order to get the challenge (not a full blown xml parser)
                 readed_chalange_str = self.sid.read()
                 challenge = re.search('<Challenge>(.*?)</Challenge>', readed_chalange_str).group(1)
@@ -180,15 +182,16 @@ class CaptureMonitor(threading.Thread):
                 response_bf = challenge + '-' + m.hexdigest().lower()
 
                 # Answer the challenge
-                conn_url = self.protocol + '://' + self.box_name + '/login_sid.lua?username=root&response=' + response_bf
+                conn_url = self.protocol + '://' + self.box_name + '/login_sid.lua?username=' + self.username + '&response=' + response_bf
                 self.logger.debug("Call the read seed token url (url:'%s', data:'%s')." % (conn_url,self.sid_login % response_bf))
                 login = urllib.urlopen(conn_url)
-
-                if login.getcode() == 200:
-                    readed_login_str = login.read()
-                    self.SID = re.search('<SID>(.*?)</SID>', readed_login_str).group(1)
+                login_http_result = login.getcode()
+                self.logger.debug("Login HTTP result:%s" % login_http_result)
+                if login_http_result == 200:
+                    read_login_str = login.read()
+                    self.SID = re.search('<SID>(.*?)</SID>', read_login_str).group(1)
                     if (self.SID == '0000000000000000'):
-                        self.logger.error("Could not login to the FritzBox: Not authorized.")
+                        self.logger.error("Could not login to the FritzBox: Not authorized.  (SID: %s)" % self.SID)
                     else:
                         self.logger.debug("Login OK (SID: %s)" % self.SID)
                     return True
@@ -197,7 +200,8 @@ class CaptureMonitor(threading.Thread):
                     self.logger.error("Could not login to the FritzBox: Unknown error")
             else:
                 self.logger.error("Could not login to the FritzBox: Error 404.")
-        except:
+        except Exception as e:
+            self.logger.debug("Exception during SID logon: %s" % e )
             # Legacy login
             command = urllib.urlopen(self.protocol + '://' + self.box_name + '/cgi-bin/webcm', self.default_login % self.password)
             response = command.read()
