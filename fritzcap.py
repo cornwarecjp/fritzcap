@@ -125,8 +125,8 @@ if __name__ == '__main__':
     main_args.add_argument('-c', '--capture_files', default=None, action='store_true', help='capture file/s. If the monitor option is not set, only one file will be captured')
     main_args.add_argument('-d', '--decode_files', nargs='*', metavar='file', type=str, help='the list of captured files to decode. All the new captures files will be decode automatically if the --capture switch is set. Read the files from the standard input if the list of files is empty and there is no capture work.')
     main_args.add_argument('-m', '--monitor_calls', default=None, action='store_true', help='start the call monitor mode. The CALL/RING/DISCONNECT events will be used to start/stop the capture automatically')
-    main_args.add_argument('-p', '--password', default=None, metavar='password', type=str, help='the password to login to the box. If not set and --use_password is set to True, than the password will be read from the console')
-    main_args.add_argument('-u', '--username', default='root', metavar='username', type=str, help='the username to login to the box. If not set and --use_password is set to True, than the username will be root')
+    main_args.add_argument('-p', '--password', default=None, metavar='password', type=str, help='the password to login to the box. If not set and --login_not_required is set to False, then the password will be read from the console')
+    main_args.add_argument('-u', '--username', default='root', metavar='username', type=str, help='the username to login to the box (Default:\'root\')')
 
     ext_args.add_argument('--config_file', default='fritzcap.conf', metavar='path_to_file', type=file, help='the fritzcap configuration file (Default:\'fritzcap.conf\')')
     ext_args.add_argument('--logging_config', default=None, metavar='path_to_file', type=str, help='the fritzcap logging configuration file (Default:\'logging.conf\')')
@@ -208,12 +208,15 @@ if __name__ == '__main__':
 
     # take the password data from the command line
     if args.capture_files and args.password is None and login_required:
-        if (platform.system() == "Windows"):
+        platform_system = platform.system()
+        if (platform_system == "Windows"):
             signal.signal(signal.SIGINT, signal_handler)
             args.password = getpass.win_getpass("Enter the FritzBox password:")
-        elif (platform.system() == "Linux"):
+        elif ((platform_system == "Linux") or (platform_system == "Darwin")):
             signal.signal(signal.SIGINT, signal_handler)
             args.password = getpass.unix_getpass("Enter the FritzBox password:")
+        else:
+            logger.warning("Need a password, but don't know how to ask as unknown platform: %s" % platform.system())
 
     ######################################
     ### init decode workers service    ###
