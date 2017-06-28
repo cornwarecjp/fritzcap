@@ -160,7 +160,8 @@ class InterfacesDumper(threading.Thread):
         parser.feed(html_content)
         # print parser.data
         self.logger.info("Fritz!Box interfaces from %s: key = value" % url)
-        for (key, value) in parser.data:
+        keyValuePairs = sorted(parser.data)
+        for (key, value) in keyValuePairs:
             ## https://stackoverflow.com/questions/10623727/python-spacing-and-aligning-strings
             self.logger.info("  %-*s= %s" % (20,key, value))
 
