@@ -121,14 +121,15 @@ if __name__ == '__main__':
     main_args = parser.add_argument_group('main arguments')
     ext_args = parser.add_argument_group('extended defaults arguments')
 
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 2.2')
+    fritzcap_version = '2.3'
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + fritzcap_version)
 
     main_args.add_argument('-c', '--capture_files', default=None, action='store_true', help='capture file/s. If the monitor option is not set, only one file will be captured')
     main_args.add_argument('-d', '--decode_files', nargs='*', metavar='file', type=str, help='the list of captured files to decode. All the new captures files will be decode automatically if the --capture switch is set. Read the files from the standard input if the list of files is empty and there is no capture work.')
     main_args.add_argument('-m', '--monitor_calls', default=None, action='store_true', help='start the call monitor mode. The CALL/RING/DISCONNECT events will be used to start/stop the capture automatically')
     main_args.add_argument('-p', '--password', default=None, metavar='password', type=str, help='the password to login to the box. If not set and --login_not_required is set to False, then the password will be read from the console')
     main_args.add_argument('-u', '--username', default='root', metavar='username', type=str, help='the username to login to the box (Default:\'root\')')
-    main_args.add_argument('-s', '--show_interfaces', default=None, action='store_true', help='shows the interfaces as value/description pairs')
+    main_args.add_argument('-s', '--show_interfaces', default=None, action='store_true', help='shows the interfaces as key/description pairs')
 
     ext_args.add_argument('--config_file', default='fritzcap.conf', metavar='path_to_file', type=file, help='the fritzcap configuration file (Default:\'fritzcap.conf\')')
     ext_args.add_argument('--logging_config', default=None, metavar='path_to_file', type=str, help='the fritzcap logging configuration file (Default:\'logging.conf\')')
@@ -138,6 +139,7 @@ if __name__ == '__main__':
     ext_args.add_argument('--protocol', default=None, metavar='protocol', type=str, help='the protocol to used to login to the FritzBox (Default: \'http\')')
     ext_args.add_argument('--cap_folder', default=None, metavar='path_pattern', type=str, help='the folder where the capture files will be stored (Default:\'captures/%%d%%m%%Y%%H%%M/\')')
     ext_args.add_argument('--cap_file', default=None, metavar='file_pattern', type=str, help='the file name where the capture data will be saved (Default:\'capture.cap\')')
+    ext_args.add_argument('--cap_interface', default=None, metavar='cap_interface', type=str, help='the key of the interface to capture data from (Default:\'3-17\' means value \'internet\')')
     ext_args.add_argument('--after_capture_time', default=None, metavar='time_in_seconds', type=int, help='time in seconds how long the capture monitor should still continue capture files after all calls were finished (Default:10)')
     ext_args.add_argument('--decode_workers_count', default=None, metavar='int', type=int, help='the count parallel workers to decode captures files. The minimal value is 1 (Default:2).')
     args = parser.parse_args()
@@ -160,6 +162,7 @@ if __name__ == '__main__':
                 "protocol": "http",
                 "cap_folder": "captures/%(tcaps.Y-m-d/HMS)/",
                 "cap_file": "capture.cap",
+                "cap_interface": " ", # needs to be a space as empty string fails with `TypeError: cannot concatenate 'str' and 'NoneType' objects`
                 "after_capture_time": 10,
                 "decode_workers_count": 2,
                 "after_capture_time": 10,
@@ -203,7 +206,7 @@ if __name__ == '__main__':
     logger = Log().getLogger()
 
     # print out debug data
-    logger.info("FritzCap 2.1 started.")
+    logger.info("FritzCap version %s started." % fritzcap_version)
     if (logger.isEnabledFor(logging.DEBUG)):
         logger.debug("Command line parameters: " + str(sys.argv))
         logger.debug("Parsed parameters:       " + str(args))
@@ -264,7 +267,7 @@ if __name__ == '__main__':
     capture_monitor = None
     if (args.capture_files):
         nothing_to_do = False
-        capture_monitor = CaptureMonitor(work_queue, data_map, args.box_name, args.username, args.password, args.protocol, args.cap_folder, args.cap_file, login_required, args.default_login, args.sid_challenge, args.sid_login, args.start_str, args.stop_str, args.after_capture_time)
+        capture_monitor = CaptureMonitor(work_queue, data_map, args.box_name, args.username, args.password, args.protocol, args.cap_folder, args.cap_file, args.cap_interface, login_required, args.default_login, args.sid_challenge, args.sid_login, args.start_str, args.stop_str, args.after_capture_time)
         all_threads.insert(0, capture_monitor)
 
     ######################################
@@ -301,4 +304,4 @@ if __name__ == '__main__':
                     still_working = False
             except IOError:
                 a = 1 # just do nothing
-    logger.info("FritzCap finished.")
+    logger.info("FritzCap version %s finished." % fritzcap_version)
