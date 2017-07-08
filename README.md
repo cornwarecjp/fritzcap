@@ -36,6 +36,29 @@ It seems not possible to ask for the current state (enabled/disabled).
 
 After it is enabled, the TCP port 1012 on your Fritz!Box is available
 
+# Examples
+
+## Show the interfaces of a Fritz!Box in default xs4all configuration:
+
+```
+# python fritzcap.py --show_interfaces --box_name 192.168.178.1 --password foobar
+```
+
+## Capture on router and switch configured Fritz!Box devices:
+
+```
+# python fritzcap.py --capture_files --decode_files --monitor_calls --box_name 192.168.171.1 --username foo --password bar
+# python fritzcap.py --capture_files --decode_files --monitor_calls --cap_interface 1-lan --box_name 192.168.124.23 --username foo --password bar
+```
+
+## Only monitors calls as implicit `root`:
+
+```
+# python fritzcap.py --monitor_calls --box_name 192.168.171.1 --password bar
+```
+
+Note this will neither capture, nor decode and logs that it cannot capture.
+
 # Command-line options
 
 ## version
@@ -119,3 +142,20 @@ extended defaults arguments:
                         the count parallel workers to decode captures files.
                         The minimal value is 1 (Default:2).
 ```
+
+## configuration parameters
+
+Configuration parameters are obtained in this order of importance (from high to low):
+
+1. command-line
+2. configuration file (example in [`fritzcap.conf`](fritzcap.conf))
+3. defaults (from the above `help`)
+
+# How to obtain?
+
+Source code available here:
+
+- browse at https://github.com/jpluimers/fritzcap
+- `git clone https://github.com/jpluimers/fritzcap.git`
+- `git clone git@github.com:jpluimers/fritzcap.git`
+- download ZIP from https://github.com/jpluimers/fritzcap/archive/master.zip
