@@ -48,15 +48,15 @@ class Tracer(threading.Thread):
         self.i = 0
         self.filename = filename
         threading.Thread.__init__(self)
-        
+
         self.logger = Log().getLogger()
- 
+
     def monitor(self, n1, n2, n3):
         # n1: running number, n2: chunk size, n3: file size or -1 if unknown
         #print ["|", "/", "-", "\\"][self.i], "\r",
         self.i += 1
         self.i %= 4
-                
+
     def run(self):
         if platform.system() == "Windows":
             w32 = ctypes.windll.kernel32
@@ -71,4 +71,3 @@ class Tracer(threading.Thread):
             self.logger.debug("Trace finished (url:'%s', filename:'%s')" % (self.url, self.filename))
         except:
             self.logger.debug("Could not open Trace (url:'%s', filename:'%s')" % (self.url, self.filename))
-

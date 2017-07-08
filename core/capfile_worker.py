@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
-################################################################################# 
+#################################################################################
 # Simple FritzCap python port
 # Simplifies generation and examination of traces taken from AVM FritzBox and/or SpeedPort
 # Traces can be examined using WireShark
@@ -45,7 +45,7 @@ from pcap_parse import PcapParser
 from g711_decoder import G711Decoder
 
 class CapfileWorker(threading.Thread):
-    
+
     def __init__(self, worker_id, decode_work_queue):
         threading.Thread.__init__(self)
         self.decode_work_queue = decode_work_queue
@@ -64,11 +64,11 @@ class CapfileWorker(threading.Thread):
                     self.logger.debug("Became None element, put a None element to the queue for the others workers and break the work.")
                     self.decode_work_queue.put(None)
                     break
-                                
+
                 self.process(filename)
             finally:
                 self.decode_work_queue.task_done()
-                
+
         self._stop.set()
         self.logger.debug("Thread stopped.")
 
@@ -76,7 +76,7 @@ class CapfileWorker(threading.Thread):
         self.logger.info("Decode process started  (worker_id:%s, file:'%s')" % (self.worker_id,filename))
         g711 = G711Decoder(filename, mix=1, linearize=1)
         PcapParser(filename, g711.decode).parse()
-        g711.finalize()        
+        g711.finalize()
         self.logger.info("Decode process finished (worker_id:%s, file:'%s')" % (self.worker_id,filename))
 
     def stop (self):

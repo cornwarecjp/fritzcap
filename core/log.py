@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
-################################################################################# 
+#################################################################################
 # Simple FritzCap python port
 # Simplifies generation and examination of traces taken from AVM FritzBox and/or SpeedPort
 # Traces can be examined using WireShark
@@ -59,29 +59,28 @@ class Log:
 
         # Store instance reference as the only member in the handle
         self.__dict__['_Log__instance'] = Log.__instance
-        
+
         logger = logging.getLogger()
 
     def file_config(self, fname):
         # create logger
         logging.config.fileConfig(fname)
         self.__instance.logger = logging.getLogger()
-        
+
     def getLogger(self):
         return self.__instance.logger
-        
+
     def debug(self, msg):
         self.__instance.logger.debug(msg)
-        
+
     def info(self, msg):
         self.__instance.logger.info(msg)
-        
+
     def warning(self, msg):
         self.__instance.logger.warning(msg)
-        
+
     def error(self, msg):
         self.__instance.logger.error(msg)
-        
+
     def critical(self, msg):
         self.__instance.logger.critical(msg)
-        

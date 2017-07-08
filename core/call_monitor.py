@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
-################################################################################# 
+#################################################################################
 # Simple FritzCap python port
 # Simplifies generation and examination of traces taken from AVM FritzBox and/or SpeedPort
 # Traces can be examined using WireShark
@@ -44,30 +44,30 @@ from log import Log
 from capture_monitor import CaptureMonitor
 
 class CallMonitor(threading.Thread):
-    
+
     def __init__(self, capture_monitor, box_name, call_service_port):
         threading.Thread.__init__(self)
-        self._stop = threading.Event()        
-        
+        self._stop = threading.Event()
+
         self.capture_monitor = capture_monitor
         self.box_name = box_name
         self.call_service_port = call_service_port
-        
+
         self.logger = Log().getLogger()
-        
+
         self.logger.debug("CallMonitor(capture_monitor:'%s', box_name:'%s', call_service_port:'%s')." % (capture_monitor,box_name,call_service_port))
-        
-    def init_connection(self):        
+
+    def init_connection(self):
         # Connect to the call monitor service over telnet.
         self.logger.info("Connect    to the call monitor service on %s:%s." % (self.box_name,self.call_service_port))
-        
+
         try:
             self.tn = telnetlib.Telnet(self.box_name, self.call_service_port)
         except IOError:
             self.logger.error("Cannot create connection to the call monitor service on %s:%s." % (self.box_name,self.call_service_port))
             self.tn = None
             return
-            
+
         self.logger.info("Connected  to the call monitor service on %s:%s." % (self.box_name,self.call_service_port))
 
     def run(self):
@@ -79,12 +79,12 @@ class CallMonitor(threading.Thread):
             self.logger.debug("Wait for call monitor status change.")
             line = ""
             while (not self._stop.isSet() and not line.endswith("\n")):
-                try:                
+                try:
                     line = line + self.tn.read_until("\n", timeout=5)        # Wait until one line data was readed from the telnet connection.
                 except AttributeError:
                         self.logger.error("Cannot read input data from telnet service. Maybe the telnet connection is broken. Stop the service.")
                         self._stop.set()
-                        
+
                 if (self._stop.isSet() and self.tn):
                     self.logger.debug("Close the connection to the telnet session.")
                     self.tn.close()
@@ -95,7 +95,7 @@ class CallMonitor(threading.Thread):
 
             if (self._stop.isSet()):
                 break
-            
+
             line = line.strip()
             if (not line):
                 continue
@@ -105,13 +105,13 @@ class CallMonitor(threading.Thread):
             event_time = datetime.datetime.now()
             # parse the oryginal telnet time. Example: 13.01.11 21:48:31
             oryginal_event_time = time.strptime(sline[0], "%d.%m.%y %H:%M:%S") # 13.01.11 21:48:31
-                    
-            self.logger.debug("Telnet:'"+line+"'")            
+
+            self.logger.debug("Telnet:'"+line+"'")
 
             # get the event command
             command = sline[1]
-            
-            if command == "RING":             # It rings, an incoming call. 
+
+            if command == "RING":             # It rings, an incoming call.
                 callers_count += 1            # Increase the count of currently led calls.
                 call_partner = sline[3]
                 if not call_partner:
@@ -119,24 +119,24 @@ class CallMonitor(threading.Thread):
                 me = sline[4]
                 if not me:
                     me = "Unknown"
-                
+
                 self.capture_monitor.set_data("callevent.name", command)
                 self.capture_monitor.set_data("acalls.number", callers_count)
                 self.capture_monitor.set_data("lineport.name", sline[5])
-                
-                self.capture_monitor.set_data("tocall", oryginal_event_time)                                
-                self.capture_monitor.set_data("tcall", event_time)                                
+
+                self.capture_monitor.set_data("tocall", oryginal_event_time)
+                self.capture_monitor.set_data("tcall", event_time)
                 self.capture_monitor.set_callnumber("caller", call_partner)
                 self.capture_monitor.set_callnumber("dialed", me)
                 self.capture_monitor.set_callnumber("me", me)
-                self.capture_monitor.set_callnumber("callpartner", call_partner)                
-                
+                self.capture_monitor.set_callnumber("callpartner", call_partner)
+
                 me_numbername = self.capture_monitor.get_call_numbername(me)
                 callpartner_numbername = self.capture_monitor.get_call_numbername(call_partner)
                 self.logger.info("Ring       (ID:%s, ActiveCalls.:%s, Caller:%s, DialedNumber:%s, LinePort:%s)" % (sline[2],callers_count,callpartner_numbername,me_numbername,sline[5]))
                 call_id_map[sline[2]] = [callpartner_numbername,me_numbername,sline[5]]
-                
-                
+
+
             elif command == "CALL":           # Number is dialed, an outgoing call.
                 callers_count += 1            # Increase the count of currently led calls.
 
@@ -150,44 +150,44 @@ class CallMonitor(threading.Thread):
                 self.capture_monitor.set_data("callevent.name", command)
                 self.capture_monitor.set_data("acalls.number", callers_count)
                 self.capture_monitor.set_data("lineport.name", sline[6])
-                self.capture_monitor.set_data("tocall", oryginal_event_time)                                
-                self.capture_monitor.set_data("tcall", event_time)                                
+                self.capture_monitor.set_data("tocall", oryginal_event_time)
+                self.capture_monitor.set_data("tcall", event_time)
                 self.capture_monitor.set_callnumber("caller", me)
                 self.capture_monitor.set_callnumber("dialed", call_partner)
                 self.capture_monitor.set_callnumber("me", me)
-                self.capture_monitor.set_callnumber("callpartner", call_partner)                                
-                
+                self.capture_monitor.set_callnumber("callpartner", call_partner)
+
                 me_numbername = self.capture_monitor.get_call_numbername(me)
                 callpartner_numbername = self.capture_monitor.get_call_numbername(call_partner)
                 self.logger.info("Call       (ID:%s, ActiveCalls.:%s, Caller:%s, DialedNumber:%s, LinePort:%s)" % (sline[2],callers_count,me_numbername,callpartner_numbername,sline[6]))
                 call_id_map[sline[2]] = [me_numbername,callpartner_numbername,sline[6]]
-            elif command == "CONNECT":        # Conversation started.                
+            elif command == "CONNECT":        # Conversation started.
                 self.capture_monitor.set_data("toconn", oryginal_event_time)
                 self.capture_monitor.set_data("tconn", event_time)
                 self.logger.info("Connect    (ID:%s, ActiveCalls.:%s, Caller:%s, DialedNumber:%s, LinePort:%s)" % (sline[2],callers_count,call_id_map[sline[2]][0],call_id_map[sline[2]][1],call_id_map[sline[2]][2]))
                 continue                      # Don't increase currently led calls, because already done with CALL/RING.
             elif command == "DISCONNECT":     # Call was ended.
                 callers_count -= 1            # Decrease the count of currently led calls.
-                
+
                 self.capture_monitor.set_data("todisc", oryginal_event_time)
-                self.capture_monitor.set_data("tdisc", event_time)                
+                self.capture_monitor.set_data("tdisc", event_time)
                 self.capture_monitor.set_data("acalls.number", callers_count)
-                
+
                 self.logger.info("Disconnect (ID:%s, ActiveCalls.:%s, Caller:%s, DialedNumber:%s, LinePort:%s)" % (sline[2],callers_count,call_id_map[sline[2]][0],call_id_map[sline[2]][1],call_id_map[sline[2]][2]))
                 if (callers_count < 0):
                     self.logger.warning("There is more stopped calls than started. Data corrupt or program started while calling. Normalize ActiveCalls to '0'")
                     callers_count = 0;
-                    self.capture_monitor.set_data("acalls.number", callers_count)                                    
+                    self.capture_monitor.set_data("acalls.number", callers_count)
             else:
                 continue
-        
+
             if (self.capture_monitor is not None):
                 if callers_count == 1:        # There is at least 1 started call, start capture of data.
                     self.logger.debug("There is at least 1 active call. Send start_capture event to the CaptureMonitor.")
                     self.capture_monitor.start_capture();
                 elif callers_count == 0:      # there are no more active calls
                     self.logger.debug("There is no more active calls. Send stop_capture event to the CaptureMonitor.")
-                    self.capture_monitor.stop_capture();                
+                    self.capture_monitor.stop_capture();
 
         self._stop.set()
         self.capture_monitor.stop()
@@ -197,6 +197,6 @@ class CallMonitor(threading.Thread):
     def stop (self):
         self.logger.debug("Received signal to stop the thread.")
         self._stop.set()
-            
+
     def stopped (self):
         return self._stop.isSet()

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
-################################################################################# 
+#################################################################################
 # Simple FritzCap python port
 # Simplifies generation and examination of traces taken from AVM FritzBox and/or SpeedPort
 # Traces can be examined using WireShark
@@ -59,17 +59,16 @@ class SytemInputFileReader(threading.Thread):
             if (line):
                 self.logger.debug("Got new file to decode from system.in. Add '%s' to the decode work queue." % (line))
                 self.decode_work_queue.put(line)
-        
+
         self.logger.debug("Put the last None element to the queue.")
         self.decode_work_queue.put(None)
 
         self._stop.set()
         self.logger.debug("Thread stopped.")
-            
+
     def stop (self):
         self._stop.set()
         sys.stdin.flush()
 
     def stopped (self):
         return self._stop.isSet()
-

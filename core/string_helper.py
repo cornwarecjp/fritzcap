@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
-################################################################################# 
+#################################################################################
 # Simple FritzCap python port
 # Simplifies generation and examination of traces taken from AVM FritzBox and/or SpeedPort
 # Traces can be examined using WireShark
@@ -41,7 +41,7 @@ import logging
 from log import Log
 
 class StringHelper():
-    
+
     # tstart: time of program start
     # tcall: time of ring/call (_Y: year)
     # tconn: time of connection
@@ -50,36 +50,36 @@ class StringHelper():
     # tcape: time of ending capture
     # caller: the caller numer/name (id,nr,name,)
     # dialed: the dialed number/name
-    # me:      my number/name 
+    # me:      my number/name
     # callpartner: foreign/calling partner number/name
     # acalls: active calls number
     # lineport: the used line port name (SIP0,SIP1,etc.)
-    
+
 
     def __init__(self):
         self.logger = Log().getLogger()
         self.logger.debug("SytemInputFileReader(decode_work_queue:'%s')" % (decode_work_queue))
-        
+
     def parse_string(data_str, data_map):
         datetime_parse_str = ""
         for (key, value) in data_map.items():
             if (type(value) == datetime.datetime):
                 datetime_parse_str = datetime_parse_str + "|" + key
-        
+
         datetime_parse_str = datetime_parse_str[1:]
 #        compile_str = r"(%\((tstart).(\w+)\))"
-#        pattern = re.compile(compile_str)    
-        
+#        pattern = re.compile(compile_str)
+
         compile_str = r"(%\((" + datetime_parse_str + r")\.(.+)\))"
-        pattern = re.compile(compile_str)    
+        pattern = re.compile(compile_str)
         matchObj = pattern.search(data_str)
         while (matchObj):
             value = StringHelper.parse_dates(matchObj.group(2), matchObj.group(3), data_map)
-            data_str = data_str[:matchObj.start(1)]+value+data_str[matchObj.end(1):]        
+            data_str = data_str[:matchObj.start(1)]+value+data_str[matchObj.end(1):]
             matchObj = pattern.search(data_str)
-        
+
         compile_str = r"(%\(((\w+).(\w+)\)))"
-        pattern = re.compile(compile_str)    
+        pattern = re.compile(compile_str)
         matchObj = pattern.search(data_str)
         while (matchObj):
             data_key = matchObj.group(2)
@@ -87,20 +87,19 @@ class StringHelper():
                 value = data_map.get(data_key)
             else:
                 value = ""
-            data_str = data_str[:matchObj.start(1)]+value+data_str[matchObj.end(1):]        
+            data_str = data_str[:matchObj.start(1)]+value+data_str[matchObj.end(1):]
             matchObj = pattern.search(data_str)
-        
+
         return data_str
-            
+
     def parse_dates(time_type, time_format, data_map):
         work_time = datetime.date(1900,1,1)
         if (data_map.has_key(time_type)):
             work_time = data_map.get(time_type)
-        
+
         time_format = re.sub(r"(\w)", r"%\1", time_format)
         str = (work_time.strftime(time_format))
         return str
 
-    parse_string = staticmethod(parse_string) 
-    parse_dates = staticmethod(parse_dates) 
-    
+    parse_string = staticmethod(parse_string)
+    parse_dates = staticmethod(parse_dates)

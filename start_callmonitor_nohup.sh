@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: iso-8859-1 -*-
-################################################################################# 
+#################################################################################
 # Start the fritzcap monitor service as background service. The console standard/error
 # output will be redirected into log_callmonitor.txt file
 #

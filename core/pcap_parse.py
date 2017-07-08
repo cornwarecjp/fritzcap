@@ -43,12 +43,12 @@ from log import Log
 ''' Parses PCAP files '''
 class PcapParser:
     def __init__(self, filename, cb):
-        self.f = open(filename, 'rb')       
+        self.f = open(filename, 'rb')
         self.cb = cb
-        
-        self.logger = Log().getLogger()        
-        
-        
+
+        self.logger = Log().getLogger()
+
+
     def parse(self):
         # Read and check magic number
         # Details s.a.
@@ -58,12 +58,12 @@ class PcapParser:
         except:
             self.logger.error('Seems, there is no valid PCAP file')
             return -1
-        if mn == 0xa1b2c3d4 or mn == 0xa1b2cd34:        # Default or modified libpcap 
+        if mn == 0xa1b2c3d4 or mn == 0xa1b2cd34:        # Default or modified libpcap
             # Little endian
             endian = '<'
             if mn == 0xa1b2cd34:
                 modified = 1
-        elif mn == 0xd4c3b2a1 or mn == 0x34cdb2a1:      # Default or modified libpcap 
+        elif mn == 0xd4c3b2a1 or mn == 0x34cdb2a1:      # Default or modified libpcap
             # Big endian
             endian = '>'
             if mn == 0x34cdb2a1:
@@ -71,8 +71,8 @@ class PcapParser:
         else:
             self.logger.error('Invalid PCAP dump header. Probably not a valid capture file')
             return -1
-        
-        # Read the rest of the dumpheader   
+
+        # Read the rest of the dumpheader
         (vmj, vmi, z, sf, sl, nw) = struct.unpack(endian + 'HHlLLL', self.f.read(20))
 
         # Loop
@@ -81,12 +81,11 @@ class PcapParser:
             ph = self.f.read(16)
             if not ph:
                 break   # end of file
-               
-            # Get some values                
+
+            # Get some values
             (ts_sec, ts_usec, incl_len, orig_len) = struct.unpack(endian + 'LLLL', ph)
 
-            if modified: 
+            if modified:
                 self.f.read(8)      # The way it is, don't know, why they had to change this plain old format
-            
-            self.cb(ts_sec, ts_usec, self.f.read(incl_len), incl_len)
 
+            self.cb(ts_sec, ts_usec, self.f.read(incl_len), incl_len)
