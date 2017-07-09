@@ -47,6 +47,7 @@ from tracer import Tracer
 
 from HTMLParser import HTMLParser
 from htmlentitydefs import name2codepoint
+from exception_logging_thread import ExceptionLoggingThread
 
 ## https://docs.python.org/2/library/htmlparser.html
 class CaptureLuaHtmlParser(HTMLParser):
@@ -120,10 +121,10 @@ class CaptureLuaHtmlParser(HTMLParser):
         pass
 
 
-class InterfacesDumper(threading.Thread):
+class InterfacesDumper(ExceptionLoggingThread):
 
     def __init__(self, box_name, username, password, protocol, login_required, default_login, sid_challenge, sid_login):
-        threading.Thread.__init__(self)
+        ExceptionLoggingThread.__init__(self)
         self._stop = threading.Event()
 
         self.box_name = box_name
@@ -139,7 +140,7 @@ class InterfacesDumper(threading.Thread):
         self.logger = Log().getLogger()
         self.logger.debug("InterfacesDumper(box_name:'%s', username:'%s', password:'%s', protocol:'%s', login_required:'%s', default_login:'%s', sid_challenge:'%s', sid_login:'%s')" % (box_name,username,password,protocol,login_required,default_login,sid_challenge,sid_login))
 
-    def run(self):
+    def run_logic(self):
         self.logger.debug("Thread started.")
 
         if self.login_required:

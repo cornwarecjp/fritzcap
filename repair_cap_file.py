@@ -192,7 +192,7 @@ while True:
 
         printed_line2 = "counter:%-10s, byte_counter:0x%-6X = %-6s, stime:%s, ts_usec:%-7s, incl_len:0x%-6X = %-6s, orig_len:0x%-6X = %-6s, data:" % (counter,nextpos,nextpos,cap_time2, ts_usec2, incl_len2, incl_len2, orig_len2, orig_len2)
 
-        print "The Oryginal is OK, but the next of oryginal seems not to be correct. Go Back..."
+        print "The original is OK, but the next of original seems not to be correct. Go Back..."
         print "\t\t"+printed_line
         print "\t\t"+printed_line2
         print ""

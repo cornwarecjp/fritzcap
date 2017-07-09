@@ -43,11 +43,12 @@ import logging
 from log import Log
 from pcap_parse import PcapParser
 from g711_decoder import G711Decoder
+from exception_logging_thread import ExceptionLoggingThread
 
-class CapfileWorker(threading.Thread):
+class CapfileWorker(ExceptionLoggingThread):
 
     def __init__(self, worker_id, decode_work_queue):
-        threading.Thread.__init__(self)
+        ExceptionLoggingThread.__init__(self)
         self.decode_work_queue = decode_work_queue
         self.worker_id = worker_id
         self._stop = threading.Event()
@@ -55,7 +56,7 @@ class CapfileWorker(threading.Thread):
         self.logger = Log().getLogger()
         self.logger.debug("CapfileWorker(worker_id:%s, decode_work_queue:%s)." % (worker_id, decode_work_queue))
 
-    def run(self):
+    def run_logic(self):
         self.logger.debug("Thread started.")
         while not self._stop.isSet():
             try:

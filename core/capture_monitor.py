@@ -46,15 +46,16 @@ import hashlib
 from log import Log
 from string_helper import StringHelper
 from tracer import Tracer
+from exception_logging_thread import ExceptionLoggingThread
 
-class CaptureMonitor(threading.Thread):
+class CaptureMonitor(ExceptionLoggingThread):
 
     state_started = False
     next_stop_time = 0
     next_start_time = 0
     cap_file_path = ""
     def __init__(self, decode_work_queue, data_map, box_name, username, password, protocol, cap_folder, cap_file, cap_interface, login_required, default_login, sid_challenge, sid_login, start_str, stop_str, after_capture_time):
-        threading.Thread.__init__(self)
+        ExceptionLoggingThread.__init__(self)
         self._stop = threading.Event()
 
         self.decode_work_queue = decode_work_queue
@@ -82,7 +83,7 @@ class CaptureMonitor(threading.Thread):
         self.logger = Log().getLogger()
         self.logger.debug("CaptureMonitor(decode_work_queue:'%s', data_map:'%s', box_name:'%s', username:'%s', password:'%s', protocol:'%s', cap_folder:'%s', cap_file:'%s', cap_interface:'%s', login_required:'%s', default_login:'%s', sid_challenge:'%s', sid_login:'%s', start_str:'%s', stop_str:'%s', after_capture_time:'%s')" % (decode_work_queue,data_map,box_name,username,password,protocol,cap_folder,cap_file,cap_interface,login_required,default_login,sid_challenge,sid_login,start_str,stop_str,after_capture_time))
 
-    def run(self):
+    def run_logic(self):
         self.logger.debug("Thread started.")
 
         if self.login_required:

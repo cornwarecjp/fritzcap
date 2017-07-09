@@ -121,7 +121,7 @@ if __name__ == '__main__':
     main_args = parser.add_argument_group('main arguments')
     ext_args = parser.add_argument_group('extended defaults arguments')
 
-    fritzcap_version = '2.3'
+    fritzcap_version = '2.3.1'
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + fritzcap_version)
 
     main_args.add_argument('-c', '--capture_files', default=None, action='store_true', help='capture file/s. If the monitor option is not set, only one file will be captured')
@@ -179,10 +179,10 @@ if __name__ == '__main__':
         if (args.__contains__(key)):
             value = args.__getattribute__(key)
 
-        if value is None and config.has_option("settings", key) and config.get("settings", key):
+        if (value is None) and config.has_option("settings", key) and config.get("settings", key):
             value = config.get("settings", key)
 
-        if value is None and default_value:
+        if (value is None) and default_value:
             value = default_value
 
         args.__setattr__(key,value)
@@ -213,7 +213,7 @@ if __name__ == '__main__':
 
 
     # take the password data from the command line
-    if (args.capture_files or args.show_interfaces) and args.password is None and login_required:
+    if (args.capture_files or args.show_interfaces) and (args.password is None) and login_required:
         platform_system = platform.system()
         if (platform_system == "Windows"):
             signal.signal(signal.SIGINT, signal_handler)
@@ -275,6 +275,9 @@ if __name__ == '__main__':
     ######################################
     if (args.monitor_calls):
         nothing_to_do = False
+        if (capture_monitor is None):
+            logger.info("Note: -m or --monitor_calls without -c or --capture_files does monitoring without capture.")
+
         call_monitor = CallMonitor(capture_monitor, args.box_name, args.call_service_port)
         all_threads.insert(0, call_monitor)
     elif (args.capture_files):

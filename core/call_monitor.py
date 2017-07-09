@@ -42,11 +42,12 @@ import datetime
 
 from log import Log
 from capture_monitor import CaptureMonitor
+from exception_logging_thread import ExceptionLoggingThread
 
-class CallMonitor(threading.Thread):
+class CallMonitor(ExceptionLoggingThread):
 
     def __init__(self, capture_monitor, box_name, call_service_port):
-        threading.Thread.__init__(self)
+        ExceptionLoggingThread.__init__(self)
         self._stop = threading.Event()
 
         self.capture_monitor = capture_monitor
@@ -70,7 +71,7 @@ class CallMonitor(threading.Thread):
 
         self.logger.info("Connected  to the call monitor service on %s:%s." % (self.box_name,self.call_service_port))
 
-    def run(self):
+    def run_logic(self):
         self.logger.debug("Thread started.")
         callers_count = 0                     # Set the count of currently led calls to 0.
         call_id_map = {}
@@ -103,8 +104,8 @@ class CallMonitor(threading.Thread):
             sline = line.split(";")
 
             event_time = datetime.datetime.now()
-            # parse the oryginal telnet time. Example: 13.01.11 21:48:31
-            oryginal_event_time = time.strptime(sline[0], "%d.%m.%y %H:%M:%S") # 13.01.11 21:48:31
+            # parse the original telnet time. Example: 13.01.11 21:48:31
+            original_event_time = time.strptime(sline[0], "%d.%m.%y %H:%M:%S") # 13.01.11 21:48:31
 
             self.logger.debug("Telnet:'"+line+"'")
 
@@ -120,19 +121,25 @@ class CallMonitor(threading.Thread):
                 if not me:
                     me = "Unknown"
 
-                self.capture_monitor.set_data("callevent.name", command)
-                self.capture_monitor.set_data("acalls.number", callers_count)
-                self.capture_monitor.set_data("lineport.name", sline[5])
+                if (self.capture_monitor is None):
+                    me_numbername = me
+                    callpartner_numbername = call_partner
 
-                self.capture_monitor.set_data("tocall", oryginal_event_time)
-                self.capture_monitor.set_data("tcall", event_time)
-                self.capture_monitor.set_callnumber("caller", call_partner)
-                self.capture_monitor.set_callnumber("dialed", me)
-                self.capture_monitor.set_callnumber("me", me)
-                self.capture_monitor.set_callnumber("callpartner", call_partner)
+                else:
+                    self.capture_monitor.set_data("callevent.name", command)
+                    self.capture_monitor.set_data("acalls.number", callers_count)
+                    self.capture_monitor.set_data("lineport.name", sline[5])
 
-                me_numbername = self.capture_monitor.get_call_numbername(me)
-                callpartner_numbername = self.capture_monitor.get_call_numbername(call_partner)
+                    self.capture_monitor.set_data("tocall", original_event_time)
+                    self.capture_monitor.set_data("tcall", event_time)
+                    self.capture_monitor.set_callnumber("caller", call_partner)
+                    self.capture_monitor.set_callnumber("dialed", me)
+                    self.capture_monitor.set_callnumber("me", me)
+                    self.capture_monitor.set_callnumber("callpartner", call_partner)
+
+                    me_numbername = self.capture_monitor.get_call_numbername(me)
+                    callpartner_numbername = self.capture_monitor.get_call_numbername(call_partner)
+
                 self.logger.info("Ring       (ID:%s, ActiveCalls.:%s, Caller:%s, DialedNumber:%s, LinePort:%s)" % (sline[2],callers_count,callpartner_numbername,me_numbername,sline[5]))
                 call_id_map[sline[2]] = [callpartner_numbername,me_numbername,sline[5]]
 
@@ -147,37 +154,45 @@ class CallMonitor(threading.Thread):
                 if not call_partner:
                     call_partner = "Unknown"
 
-                self.capture_monitor.set_data("callevent.name", command)
-                self.capture_monitor.set_data("acalls.number", callers_count)
-                self.capture_monitor.set_data("lineport.name", sline[6])
-                self.capture_monitor.set_data("tocall", oryginal_event_time)
-                self.capture_monitor.set_data("tcall", event_time)
-                self.capture_monitor.set_callnumber("caller", me)
-                self.capture_monitor.set_callnumber("dialed", call_partner)
-                self.capture_monitor.set_callnumber("me", me)
-                self.capture_monitor.set_callnumber("callpartner", call_partner)
+                if (self.capture_monitor is None):
+                    me_numbername = self.capture_monitor.get_call_numbername(me)
+                    callpartner_numbername = self.capture_monitor.get_call_numbername(call_partner)
+                else:
+                    self.capture_monitor.set_data("callevent.name", command)
+                    self.capture_monitor.set_data("acalls.number", callers_count)
+                    self.capture_monitor.set_data("lineport.name", sline[6])
+                    self.capture_monitor.set_data("tocall", original_event_time)
+                    self.capture_monitor.set_data("tcall", event_time)
+                    self.capture_monitor.set_callnumber("caller", me)
+                    self.capture_monitor.set_callnumber("dialed", call_partner)
+                    self.capture_monitor.set_callnumber("me", me)
+                    self.capture_monitor.set_callnumber("callpartner", call_partner)
 
-                me_numbername = self.capture_monitor.get_call_numbername(me)
-                callpartner_numbername = self.capture_monitor.get_call_numbername(call_partner)
+                    me_numbername = self.capture_monitor.get_call_numbername(me)
+                    callpartner_numbername = self.capture_monitor.get_call_numbername(call_partner)
+
                 self.logger.info("Call       (ID:%s, ActiveCalls.:%s, Caller:%s, DialedNumber:%s, LinePort:%s)" % (sline[2],callers_count,me_numbername,callpartner_numbername,sline[6]))
                 call_id_map[sline[2]] = [me_numbername,callpartner_numbername,sline[6]]
             elif command == "CONNECT":        # Conversation started.
-                self.capture_monitor.set_data("toconn", oryginal_event_time)
-                self.capture_monitor.set_data("tconn", event_time)
+                if (self.capture_monitor is not None):
+                    self.capture_monitor.set_data("toconn", original_event_time)
+                    self.capture_monitor.set_data("tconn", event_time)
                 self.logger.info("Connect    (ID:%s, ActiveCalls.:%s, Caller:%s, DialedNumber:%s, LinePort:%s)" % (sline[2],callers_count,call_id_map[sline[2]][0],call_id_map[sline[2]][1],call_id_map[sline[2]][2]))
                 continue                      # Don't increase currently led calls, because already done with CALL/RING.
             elif command == "DISCONNECT":     # Call was ended.
                 callers_count -= 1            # Decrease the count of currently led calls.
 
-                self.capture_monitor.set_data("todisc", oryginal_event_time)
-                self.capture_monitor.set_data("tdisc", event_time)
-                self.capture_monitor.set_data("acalls.number", callers_count)
+                if (self.capture_monitor is not None):
+                    self.capture_monitor.set_data("todisc", original_event_time)
+                    self.capture_monitor.set_data("tdisc", event_time)
+                    self.capture_monitor.set_data("acalls.number", callers_count)
 
                 self.logger.info("Disconnect (ID:%s, ActiveCalls.:%s, Caller:%s, DialedNumber:%s, LinePort:%s)" % (sline[2],callers_count,call_id_map[sline[2]][0],call_id_map[sline[2]][1],call_id_map[sline[2]][2]))
                 if (callers_count < 0):
                     self.logger.warning("There is more stopped calls than started. Data corrupt or program started while calling. Normalize ActiveCalls to '0'")
                     callers_count = 0;
-                    self.capture_monitor.set_data("acalls.number", callers_count)
+                    if (self.capture_monitor is not None):
+                        self.capture_monitor.set_data("acalls.number", callers_count)
             else:
                 continue
 
@@ -190,9 +205,9 @@ class CallMonitor(threading.Thread):
                     self.capture_monitor.stop_capture();
 
         self._stop.set()
-        self.capture_monitor.stop()
+        if (self.capture_monitor is not None):
+            self.capture_monitor.stop()
         self.logger.debug("Thread stopped.")
-
 
     def stop (self):
         self.logger.debug("Received signal to stop the thread.")

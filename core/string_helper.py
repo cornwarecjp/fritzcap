@@ -58,7 +58,7 @@ class StringHelper():
 
     def __init__(self):
         self.logger = Log().getLogger()
-        self.logger.debug("SytemInputFileReader(decode_work_queue:'%s')" % (decode_work_queue))
+        self.logger.debug("StringHelper()")
 
     def parse_string(data_str, data_map):
         datetime_parse_str = ""

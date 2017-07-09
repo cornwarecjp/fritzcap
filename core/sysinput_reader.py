@@ -41,18 +41,19 @@ import time, random
 
 import logging
 from log import Log
+from exception_logging_thread import ExceptionLoggingThread
 
-class SytemInputFileReader(threading.Thread):
+class SytemInputFileReader(ExceptionLoggingThread):
 
     def __init__(self, decode_work_queue):
-        threading.Thread.__init__(self)
+        ExceptionLoggingThread.__init__(self)
         self._stop = threading.Event()
         self.decode_work_queue = decode_work_queue
 
         self.logger = Log().getLogger()
         self.logger.debug("SytemInputFileReader(decode_work_queue:'%s')" % (decode_work_queue))
 
-    def run(self):
+    def run_logic(self):
         self.logger.debug("Thread started.")
         for line in sys.stdin:
             line = line.strip()

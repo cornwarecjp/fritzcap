@@ -33,21 +33,21 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##################################################################################
 
-import threading, urllib, ctypes, platform
+import urllib, ctypes, platform
 
 from log import Log
+from exception_logging_thread import ExceptionLoggingThread
 
 THREAD_SET_INFORMATION = 0x20
 THREAD_PRIORITY_ABOVE_NORMAL = 1
 
-
 ''' Tracer runs in a separate thread'''
-class Tracer(threading.Thread):
+class Tracer(ExceptionLoggingThread):
     def __init__(self, url, filename):
         self.url = url
         self.i = 0
         self.filename = filename
-        threading.Thread.__init__(self)
+        ExceptionLoggingThread.__init__(self)
 
         self.logger = Log().getLogger()
 
@@ -57,7 +57,7 @@ class Tracer(threading.Thread):
         self.i += 1
         self.i %= 4
 
-    def run(self):
+    def run_logic(self):
         if platform.system() == "Windows":
             w32 = ctypes.windll.kernel32
             tid = w32.GetCurrentThreadId()
