@@ -3,6 +3,11 @@ fritzcap
 
 *Fritz!Box trace helper tool*.
 
+```diff
+- This project is on hold as I am trying to recover from metastasized rectum cancer as of fall 2019. 
+- It is unclear if I will ever be able to put effort in it again.
+```
+
 For historic purposes, I've put the [historical 2011-2013 readme at Google Code](https://code.google.com/archive/p/fritzcap/) - which isn't accurate any more - in a [separate file](GoogleCode-README.md).
 
 # Project objectives
