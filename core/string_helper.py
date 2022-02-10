@@ -78,7 +78,7 @@ class StringHelper():
             data_str = data_str[:matchObj.start(1)]+value+data_str[matchObj.end(1):]
             matchObj = pattern.search(data_str)
 
-        compile_str = r"(%\(((\w+).(\w+)\)))"
+        compile_str = r"(%\(((\w+).(\w+))\))"
         pattern = re.compile(compile_str)
         matchObj = pattern.search(data_str)
         while (matchObj):
