@@ -3,12 +3,13 @@ fritzcap
 
 *Fritz!Box trace helper tool*.
 
-```diff
-- This project is on hold as I am trying to recover from metastasized rectum cancer as of fall 2019. 
-- It is unclear if I will ever be able to put effort in it again.
-```
+This is an updated version of https://github.com/jpluimers/fritzcap
 
-For historic purposes, I've put the [historical 2011-2013 readme at Google Code](https://code.google.com/archive/p/fritzcap/) - which isn't accurate any more - in a [separate file](GoogleCode-README.md).
+It has been ported to Python 3, and some small bugs have been fixed.
+Since not all functionality has been tested, the Python 3 port may be partial,
+and it may still have left behind some bugs in untested areas.
+
+For historic purposes, the [historical 2011-2013 readme at Google Code](https://code.google.com/archive/p/fritzcap/) - which isn't accurate any more - is placed in a [separate file](GoogleCode-README.md).
 
 # Project objectives
 
@@ -28,7 +29,7 @@ The software may be used in order to debug problems with the local network insta
 
 # Prerequisites
 
-You need to have Python >= v. 2.6 installed on your machine. Go to http://www.python.org/download/ to find an appropriate download for your system.
+You need to have Python 3 installed on your machine. Go to http://www.python.org/download/ to find an appropriate download for your system.
 
 # How to enable/disable call monitoring
 
