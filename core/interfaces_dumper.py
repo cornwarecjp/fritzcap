@@ -34,9 +34,9 @@
 import datetime
 import logging
 import threading
-import Queue
+import queue
 import time, datetime, random
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import os
 import re
 import hashlib
@@ -45,8 +45,8 @@ from log import Log
 from string_helper import StringHelper
 from tracer import Tracer
 
-from HTMLParser import HTMLParser
-from htmlentitydefs import name2codepoint
+from html.parser import HTMLParser
+from html.entities import name2codepoint
 from exception_logging_thread import ExceptionLoggingThread
 
 ## https://docs.python.org/2/library/htmlparser.html
@@ -154,7 +154,7 @@ class InterfacesDumper(ExceptionLoggingThread):
         else:
             url = self.protocol + '://' + self.box_name + '/capture.lua'
         ## https://docs.python.org/2/library/urllib.html
-        url_handle = urllib.urlopen(url)
+        url_handle = urllib.request.urlopen(url)
         html_content = url_handle.read()
         # self.logger.debug("%s" % html_content)
         parser = CaptureLuaHtmlParser()
@@ -176,7 +176,7 @@ class InterfacesDumper(ExceptionLoggingThread):
             # Try to get a session id SID
             conn_url = self.protocol + '://' + self.box_name + '/login_sid.lua'
             self.logger.debug("Call the challange token url (url:'%s')" % conn_url)
-            self.sid = urllib.urlopen(conn_url)
+            self.sid = urllib.request.urlopen(conn_url)
             sid_http_result = self.sid.getcode()
             self.logger.debug("SID HTTP result:%s" % sid_http_result)
             if sid_http_result == 200:
@@ -197,7 +197,7 @@ class InterfacesDumper(ExceptionLoggingThread):
                 # Answer the challenge
                 conn_url = self.protocol + '://' + self.box_name + '/login_sid.lua?username=' + self.username + '&response=' + response_bf
                 self.logger.debug("Call the read seed token url (url:'%s', data:'%s')." % (conn_url,self.sid_login % response_bf))
-                login = urllib.urlopen(conn_url)
+                login = urllib.request.urlopen(conn_url)
                 login_http_result = login.getcode()
                 self.logger.debug("Login HTTP result:%s" % login_http_result)
                 if login_http_result == 200:
@@ -216,12 +216,12 @@ class InterfacesDumper(ExceptionLoggingThread):
         except Exception as e:
             self.logger.debug("Exception during SID logon: %s" % e )
             # Legacy login
-            command = urllib.urlopen(self.protocol + '://' + self.box_name + '/cgi-bin/webcm', self.default_login % self.password)
+            command = urllib.request.urlopen(self.protocol + '://' + self.box_name + '/cgi-bin/webcm', self.default_login % self.password)
             response = command.read()
             # Right now I don't know how to check the result of a login operation. So I just search for the errorMessage
             if command.getcode() == 200:
                 try:
-                    result = urllib.unquote(re.search('<p class="errorMessage">(.*?)</p>', response).group(1).decode('iso-8859-1')).replace("&nbsp;"," ")
+                    result = urllib.parse.unquote(re.search('<p class="errorMessage">(.*?)</p>', response).group(1).decode('iso-8859-1')).replace("&nbsp;"," ")
                 except:
                     result = ''
                 self.logger.error('Login attempt was made, but something was wrong: %s' % result)

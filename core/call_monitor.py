@@ -35,7 +35,7 @@
 
 
 import threading
-import Queue
+import queue
 import time, random
 import telnetlib
 import datetime

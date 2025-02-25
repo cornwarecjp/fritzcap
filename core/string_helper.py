@@ -62,7 +62,7 @@ class StringHelper():
 
     def parse_string(data_str, data_map):
         datetime_parse_str = ""
-        for (key, value) in data_map.items():
+        for (key, value) in list(data_map.items()):
             if (type(value) == datetime.datetime):
                 datetime_parse_str = datetime_parse_str + "|" + key
 
@@ -83,7 +83,7 @@ class StringHelper():
         matchObj = pattern.search(data_str)
         while (matchObj):
             data_key = matchObj.group(2)
-            if (data_map.has_key(data_key)):
+            if (data_key in data_map):
                 value = data_map.get(data_key)
             else:
                 value = ""
@@ -94,7 +94,7 @@ class StringHelper():
 
     def parse_dates(time_type, time_format, data_map):
         work_time = datetime.date(1900,1,1)
-        if (data_map.has_key(time_type)):
+        if (time_type in data_map):
             work_time = data_map.get(time_type)
 
         time_format = re.sub(r"(\w)", r"%\1", time_format)

@@ -37,9 +37,9 @@ import sys, platform, signal
 import datetime
 import re
 import argparse
-import ConfigParser
+import configparser
 import threading
-import Queue
+import queue
 import time, random
 import getpass
 
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # read the config file
-    config = ConfigParser.RawConfigParser()
+    config = configparser.RawConfigParser()
     config.readfp(args.config_file)
 
     # set the defaults
@@ -174,7 +174,7 @@ if __name__ == '__main__':
                 }
 
     # read the values from commandline parameter -> config parameters -> default value
-    for key, default_value in defaults.items():
+    for key, default_value in list(defaults.items()):
         value = None
         if (args.__contains__(key)):
             value = args.__getattribute__(key)
@@ -238,7 +238,7 @@ if __name__ == '__main__':
     ######################################
     if (args.decode_files is not None):
         nothing_to_do = False
-        work_queue = Queue.Queue(0)
+        work_queue = queue.Queue(0)
 
         if (args.decode_workers_count < 1):
             logger.warning("The workers count is '< 1' now and will be set to '1'. At least 1 worker have to be active to do decode work.")

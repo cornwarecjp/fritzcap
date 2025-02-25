@@ -201,7 +201,7 @@ class G711Decoder:
                 # Find the SSI of current stream in stream descriptor array. If not contained, allocate a slot and add it
                 sd = self.find_sd_slot(ssi)
                 # Set time of first appearance of this particular stream
-                if not sd.has_key('first_seen_at'):
+                if 'first_seen_at' not in sd:
                     sd['first_seen_at'] =  datetime.datetime.fromtimestamp(time_sec) + datetime.timedelta(microseconds = time_usec)
                     # Take over ip source/destination information
                     (src_ip, dst_ip) = struct.unpack('>LL', packet[candidate['offs']-28 : candidate['offs']-20])
@@ -232,7 +232,7 @@ class G711Decoder:
                     self.write_RIFF_header(sd)
 
                 # Do we already have received a sequence number? If yes, check whether we are in sequence
-                if sd.has_key('expected') and seqnr != sd['expected']:
+                if 'expected' in sd and seqnr != sd['expected']:
                     sd['errors'] += 1
                     lost = abs(sd['expected']-seqnr)
                 else:
@@ -243,12 +243,12 @@ class G711Decoder:
 
                 # Comfort Noise?
                 if payloadtype == 13:
-                    if not sd.has_key('ts_cn'):
+                    if 'ts_cn' not in sd:
                         sd['ts_cn'] = timestamp # Indicates the number of samples
                         return                  # Just react on the first seen CN packet
                 else:
                     # Was there a CN sequence before?
-                    if sd.has_key('ts_cn'):
+                    if 'ts_cn' in sd:
                         pad = array.array('B', (0 for i in range(sd['blockalign']*(timestamp - sd['ts_cn'])))) # Silence
                         sd['fo'].write(pad)
                         sd['nr_samples'] += timestamp - sd['ts_cn']

@@ -36,9 +36,9 @@
 import datetime
 import logging
 import threading
-import Queue
+import queue
 import time, datetime, random
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import os
 import re
 import hashlib
@@ -167,7 +167,7 @@ class CaptureMonitor(ExceptionLoggingThread):
             # Try to get a session id SID
             conn_url = self.base_url + '/login_sid.lua'
             self.logger.debug("Call the challange token url (url:'%s')" % conn_url)
-            self.sid = urllib.urlopen(conn_url)
+            self.sid = urllib.request.urlopen(conn_url)
             sid_http_result = self.sid.getcode()
             self.logger.debug("SID HTTP result:%s" % sid_http_result)
             if sid_http_result == 200:
@@ -188,7 +188,7 @@ class CaptureMonitor(ExceptionLoggingThread):
                 # Answer the challenge
                 conn_url = self.base_url + '/login_sid.lua?username=' + self.username + '&response=' + response_bf
                 self.logger.debug("Call the read seed token url (url:'%s', data:'%s')." % (conn_url,self.sid_login % response_bf))
-                login = urllib.urlopen(conn_url)
+                login = urllib.request.urlopen(conn_url)
                 login_http_result = login.getcode()
                 self.logger.debug("Login HTTP result:%s" % login_http_result)
                 if login_http_result == 200:
@@ -207,12 +207,12 @@ class CaptureMonitor(ExceptionLoggingThread):
         except Exception as e:
             self.logger.debug("Exception during SID logon: %s" % e )
             # Legacy login
-            command = urllib.urlopen(self.base_url + '/cgi-bin/webcm', self.default_login % self.password)
+            command = urllib.request.urlopen(self.base_url + '/cgi-bin/webcm', self.default_login % self.password)
             response = command.read()
             # Right now I don't know how to check the result of a login operation. So I just search for the errorMessage
             if command.getcode() == 200:
                 try:
-                    result = urllib.unquote(re.search('<p class="errorMessage">(.*?)</p>', response).group(1).decode('iso-8859-1')).replace("&nbsp;"," ")
+                    result = urllib.parse.unquote(re.search('<p class="errorMessage">(.*?)</p>', response).group(1).decode('iso-8859-1')).replace("&nbsp;"," ")
                 except:
                     result = ''
                 self.logger.error('Login attempt was made, but something was wrong: %s' % result)
@@ -267,7 +267,7 @@ class CaptureMonitor(ExceptionLoggingThread):
         else:
             url = url_stop
         self.logger.debug("Send capture stop request to the box           (url:'%s', capture_file:'%s')." % (url, self.cap_file_path))
-        urllib.urlopen(url)
+        urllib.request.urlopen(url)
         self.logger.debug("Send capture stop request to the box finished  (url:'%s', capture_file:'%s')." % (url, self.cap_file_path))
         self.logger.info("Capture finished (capture_file:'%s')." % (self.cap_file_path))
         self.set_data("tcape",datetime.datetime.now())
@@ -309,7 +309,7 @@ class CaptureMonitor(ExceptionLoggingThread):
         self.data_map[key+".number"] = number
         self.data_map[key+".name"] = ""
         self.data_map[key+".numbername"] = number
-        if (self.data_map.has_key("pbook_number."+number)):
+        if ("pbook_number."+number in self.data_map):
             self.data_map[key+".name"] = self.data_map.get("pbook_number."+number)
             self.data_map[key+".numbername"] = self.get_call_numbername(number)
 
@@ -317,7 +317,7 @@ class CaptureMonitor(ExceptionLoggingThread):
         if (not number):
             number = "Unknown"
 
-        if (self.data_map.has_key("pbook_number."+number)):
+        if ("pbook_number."+number in self.data_map):
             return number+"("+self.data_map.get("pbook_number."+number)+")"
         return number
 

@@ -33,7 +33,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##################################################################################
 
-import urllib, ctypes, platform
+import urllib.request, urllib.parse, urllib.error, ctypes, platform
 
 from log import Log
 from exception_logging_thread import ExceptionLoggingThread
@@ -67,7 +67,7 @@ class Tracer(ExceptionLoggingThread):
             w32.CloseHandle(handle)
         try:
             self.logger.debug("Trace started  (url:'%s', filename:'%s')" % (self.url, self.filename))
-            urllib.urlretrieve(self.url, self.filename, self.monitor)
+            urllib.request.urlretrieve(self.url, self.filename, self.monitor)
             self.logger.debug("Trace finished (url:'%s', filename:'%s')" % (self.url, self.filename))
         except:
             self.logger.debug("Could not open Trace (url:'%s', filename:'%s')" % (self.url, self.filename))

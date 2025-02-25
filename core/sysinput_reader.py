@@ -36,7 +36,7 @@
 
 import sys
 import threading
-import Queue
+import queue
 import time, random
 
 import logging

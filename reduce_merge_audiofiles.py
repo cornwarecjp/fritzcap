@@ -83,11 +83,11 @@ def merge_reduce_3files(file1, file2, file3, path="", prefix=""):
     command2 = "sox %s %s -M %s.wav" % (concat_file,third_file,mixed_file)
     command3 = "sox %s %s -M %s.ogg" % (concat_file,third_file,mixed_file)
 
-    print "command1:'%s'" % command1
+    print("command1:'%s'" % command1)
     os.system(command1)
-    print "command2:'%s'" % command2
+    print("command2:'%s'" % command2)
     os.system(command2)
-    print "command3:'%s'" % command3
+    print("command3:'%s'" % command3)
     os.system(command3)
 
 
@@ -129,7 +129,7 @@ def merge_reduce_files(path, file_names):
                 file1 = "%s%s" % (path,last_mix_wav)
                 file2 = "%s%smix_%s_%s.ogg" % (path,prefix,first_number-2,first_number-1)
                 command = "sox %s %s" % (file1,file2)
-                print "command:'%s'" % command
+                print("command:'%s'" % command)
                 os.system(command)
             elif ((first_number - last_number) == 2):
                 file1 = "%s%s%s_.wav" % (path,prefix,(first_number - 3))
@@ -150,7 +150,7 @@ def merge_reduce_files(path, file_names):
         file1 = "%s%smix_%s_%s.wav" % (path,prefix,last_filenumber-1,last_filenumber-0)
         file2 = "%s%smix_%s_%s.ogg" % (path,prefix,last_filenumber-1,last_filenumber-0)
         command = "sox %s %s" % (file1,file2)
-        print "command:'%s'" % command
+        print("command:'%s'" % command)
         os.system(command)
     elif ((last_filenumber - last_number) == 1):
         file1 = "%s%s%s_.wav" % (path,prefix,last_filenumber - 2)

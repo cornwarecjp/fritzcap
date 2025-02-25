@@ -37,7 +37,7 @@
 ##################################################################################
 
 
-import urllib, re, timeit, hashlib, sys, datetime, os, struct, array
+import urllib.request, urllib.parse, urllib.error, re, timeit, hashlib, sys, datetime, os, struct, array
 
 #typedef struct pcap_hdr_s {
 #        guint32 magic_number;   /* magic number */
@@ -92,8 +92,8 @@ def check_data(data, filepos, last_time_sec):
         (ts_sec2, ts_usec2, incl_len2, orig_len2, check_ok2) = check_packet_header_buff(new_data, last_time_sec, snaplen)
         if (check_ok2):
             cap_time2 = datetime.datetime.fromtimestamp(ts_sec2)
-            print "Probably new capture package found inside of data. Check, if the next chunk is also O.K."
-            print "\t\tcounter:%-10s, byte_counter:0x%-6X = %-6s, stime:%s, ts_usec:%-7s, incl_len:0x%-6X = %-6s, orig_len:0x%-6X = %-6s, data:" % (counter,(filepos+i),(filepos+i),cap_time2, ts_usec2, incl_len2, incl_len2, orig_len2, orig_len2)
+            print("Probably new capture package found inside of data. Check, if the next chunk is also O.K.")
+            print("\t\tcounter:%-10s, byte_counter:0x%-6X = %-6s, stime:%s, ts_usec:%-7s, incl_len:0x%-6X = %-6s, orig_len:0x%-6X = %-6s, data:" % (counter,(filepos+i),(filepos+i),cap_time2, ts_usec2, incl_len2, incl_len2, orig_len2, orig_len2))
             nextpos2 = byte_counter+i+incl_len2+24
             if (nextpos+16 > file_to_open_size):
                 break # end of file
@@ -101,12 +101,12 @@ def check_data(data, filepos, last_time_sec):
             (ts_sec3, ts_usec3, incl_len3, orig_len3, check_ok3) = check_packet_header(f, counter, snaplen, nextpos2)
             if (check_ok3):
                 f.seek(byte_counter+i)
-                print "\t\tThe next chunk is O.K. Set the file pos to probably chunk and continue work...\n"
+                print("\t\tThe next chunk is O.K. Set the file pos to probably chunk and continue work...\n")
                 return i
             else:
-                print "\t\tThe next chunk is not O.K. Continue searching in data..."
+                print("\t\tThe next chunk is not O.K. Continue searching in data...")
 
-    print ""
+    print("")
     return data_len
 
 file_to_open = "F:\\tmp\\290120112105\\capture.cap"
@@ -119,7 +119,7 @@ modified = 0
 byte_counter = 0
 
 a = datetime.datetime.fromtimestamp(0)
-print a
+print(a)
 
 try:
     ph = f.read(4)
@@ -176,7 +176,7 @@ while True:
         if (check_ok2):
             byte_counter+=16
             if (counter % 10000 == 0):
-                print printed_line
+                print(printed_line)
 
             if modified:
                 incl_len+=8      # The way it is, don't know, why they had to change this plain old format
@@ -192,19 +192,19 @@ while True:
 
         printed_line2 = "counter:%-10s, byte_counter:0x%-6X = %-6s, stime:%s, ts_usec:%-7s, incl_len:0x%-6X = %-6s, orig_len:0x%-6X = %-6s, data:" % (counter,nextpos,nextpos,cap_time2, ts_usec2, incl_len2, incl_len2, orig_len2, orig_len2)
 
-        print "The original is OK, but the next of original seems not to be correct. Go Back..."
-        print "\t\t"+printed_line
-        print "\t\t"+printed_line2
-        print ""
+        print("The original is OK, but the next of original seems not to be correct. Go Back...")
+        print("\t\t"+printed_line)
+        print("\t\t"+printed_line2)
+        print("")
         byte_counter+=16 # don't need to repeat checking of the right header
         f.seek(byte_counter)
         continue
 
     byte_counter+=1
     f.seek(byte_counter)
-    print "Analyse the next (1024*1024 Bytes) data  for probably packages..."
-    print "\t\t"+printed_line
-    print ""
+    print("Analyse the next (1024*1024 Bytes) data  for probably packages...")
+    print("\t\t"+printed_line)
+    print("")
     data = f.read(1024*1024)
     incl_len = check_data(data, byte_counter, ts_sec)
     byte_counter+=incl_len
