@@ -71,3 +71,5 @@ class Tracer(ExceptionLoggingThread):
             self.logger.debug("Trace finished (url:'%s', filename:'%s')" % (self.url, self.filename))
         except:
             self.logger.debug("Could not open Trace (url:'%s', filename:'%s')" % (self.url, self.filename))
+            raise
+
