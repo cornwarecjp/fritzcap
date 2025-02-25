@@ -173,10 +173,10 @@ class CaptureMonitor(ExceptionLoggingThread):
             if sid_http_result == 200:
                 # Read and parse the response in order to get the challenge (not a full blown xml parser)
                 readed_chalange_str = self.sid.read()
-                challenge = re.search('<Challenge>(.*?)</Challenge>', readed_chalange_str).group(1)
+                challenge = re.search(b'<Challenge>(.*?)</Challenge>', readed_chalange_str).group(1).decode('iso-8859-1')
 
                 # Create a UTF-16LE string from challenge + '-' + password, non ISO-8859-1 characters will except here (e.g. EUR)
-                challenge_bf = (challenge + '-' + self.password).decode('iso-8859-1').encode('utf-16le')
+                challenge_bf = (challenge + '-' + self.password).encode('utf-16le')
 
                 # Calculate the MD5 hash
                 m = hashlib.md5()
@@ -193,7 +193,7 @@ class CaptureMonitor(ExceptionLoggingThread):
                 self.logger.debug("Login HTTP result:%s" % login_http_result)
                 if login_http_result == 200:
                     read_login_str = login.read()
-                    self.SID = re.search('<SID>(.*?)</SID>', read_login_str).group(1)
+                    self.SID = re.search(b'<SID>(.*?)</SID>', read_login_str).group(1).decode('iso-8859-1')
                     if (self.SID == '0000000000000000'):
                         self.logger.error("Could not login to the FritzBox: Not authorized.  (SID: %s)" % self.SID)
                     else:
@@ -207,7 +207,7 @@ class CaptureMonitor(ExceptionLoggingThread):
         except Exception as e:
             self.logger.debug("Exception during SID logon: %s" % e )
             # Legacy login
-            command = urllib.request.urlopen(self.base_url + '/cgi-bin/webcm', self.default_login % self.password)
+            command = urllib.request.urlopen(self.base_url + '/cgi-bin/webcm', (self.default_login % self.password).encode('iso-8859-1'))
             response = command.read()
             # Right now I don't know how to check the result of a login operation. So I just search for the errorMessage
             if command.getcode() == 200:

@@ -78,10 +78,10 @@ class CallMonitor(ExceptionLoggingThread):
         self.init_connection()
         while self.tn and not self._stop.isSet():
             self.logger.debug("Wait for call monitor status change.")
-            line = ""
-            while (not self._stop.isSet() and not line.endswith("\n")):
+            line = b""
+            while (not self._stop.isSet() and not line.endswith(b"\n")):
                 try:
-                    line = line + self.tn.read_until("\n", timeout=5)        # Wait until one line data was readed from the telnet connection.
+                    line = line + self.tn.read_until(b"\n", timeout=5)        # Wait until one line data was readed from the telnet connection.
                 except AttributeError:
                         self.logger.error("Cannot read input data from telnet service. Maybe the telnet connection is broken. Stop the service.")
                         self._stop.set()
@@ -97,7 +97,7 @@ class CallMonitor(ExceptionLoggingThread):
             if (self._stop.isSet()):
                 break
 
-            line = line.strip()
+            line = line.decode('iso-8859-1').strip()
             if (not line):
                 continue
 

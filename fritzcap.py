@@ -131,7 +131,7 @@ if __name__ == '__main__':
     main_args.add_argument('-u', '--username', default='root', metavar='username', type=str, help='the username to login to the box (Default:\'root\')')
     main_args.add_argument('-s', '--show_interfaces', default=None, action='store_true', help='shows the interfaces as key/description pairs')
 
-    ext_args.add_argument('--config_file', default='fritzcap.conf', metavar='path_to_file', type=file, help='the fritzcap configuration file (Default:\'fritzcap.conf\')')
+    ext_args.add_argument('--config_file', default='fritzcap.conf', metavar='path_to_file', type=argparse.FileType('r'), help='the fritzcap configuration file (Default:\'fritzcap.conf\')')
     ext_args.add_argument('--logging_config', default=None, metavar='path_to_file', type=str, help='the fritzcap logging configuration file (Default:\'logging.conf\')')
     ext_args.add_argument('--box_name', default=None, metavar='host_or_IP', type=str, help='the host name or IP address of the FritzBox (Default:\'fritz.box\')')
     ext_args.add_argument('--call_service_port', default=None, metavar='port', type=int, help='the port number of the FritzBox call monitor telnet service (Default:1012)')
