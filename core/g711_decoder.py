@@ -6,6 +6,7 @@
 # Traces can be examined using WireShark
 # (c) neil.young 2010 (spongebob.squarepants in http://www.ip-phone-forum.de/)
 # based on the Windows GUI exe with same name
+# (c) CJP 2025 (cornwarecjp@ultimatestunts.nl)
 ##################################################################################
 # Copyright (c) 2010, neil.young
 # All rights reserved.

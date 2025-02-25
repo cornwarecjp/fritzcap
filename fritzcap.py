@@ -6,6 +6,7 @@
 # Traces can be examined using WireShark
 # (c) tom2bor 2011 (tom2bor in http://www.ip-phone-forum.de/)
 # based on the Windows GUI exe with same name
+# (c) CJP 2025 (cornwarecjp@ultimatestunts.nl)
 ##################################################################################
 # Copyright (c) 2011, tom2bor
 # All rights reserved.

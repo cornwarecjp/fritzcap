@@ -4,6 +4,7 @@
 # Dumps the Fritz!Box interfaces by parsing http://fritz.box/html/capture.html
 # Based on CaptureMonitor.py
 # (c) wiert.me 2017 (https://wiert.me)
+# (c) CJP 2025 (cornwarecjp@ultimatestunts.nl)
 ##################################################################################
 # Copyright (c) 2017, wiert.me
 # All rights reserved.
