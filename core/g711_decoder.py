@@ -223,7 +223,7 @@ class G711Decoder:
                             sd['format'] = 7            # CCITT G.711 u
                         sd['bitspersample'] = 8         # 8 bit
 
-                    sd['blockalign'] = sd['bitspersample'] / 8 * sd['channels']
+                    sd['blockalign'] = sd['bitspersample'] // 8 * sd['channels']
 
                     # Open target file for stream
                     sd['fo'] = open("%s_%d_.wav" % (self.file, sd['index']), 'wb+')
@@ -268,14 +268,14 @@ class G711Decoder:
                 # This takes a lot of time...
                 if payloadtype == 8:
                     if self.linearize:
-                        audio = array.array('h', (self.alaw2linear[ord(packet[i])] for i in range(start,end)))
+                        audio = array.array('h', (self.alaw2linear[packet[i]] for i in range(start,end)))
                     else:
-                        audio = array.array('B', (ord(packet[i]) for i in range(start,end)))
+                        audio = array.array('B', (packet[i] for i in range(start,end)))
                 else:
                     if self.linearize:
-                        audio = array.array('h', (self.ulaw2linear[ord(packet[i])] for i in range(start,end)))
+                        audio = array.array('h', (self.ulaw2linear[packet[i]] for i in range(start,end)))
                     else:
-                        audio = array.array('B', (ord(packet[i]) for i in range(start,end)))
+                        audio = array.array('B', (packet[i] for i in range(start,end)))
 
                 sd['fo'].write(audio)
                 sd['nr_samples'] += candidate['chunk']
@@ -349,7 +349,7 @@ class G711Decoder:
                                 leader_sample = float(struct.unpack("<h", leader['fo'].read(leader['blockalign']))[0]) * 0.707
                                 follower_sample = float(struct.unpack("<h", follower['fo'].read(follower['blockalign']))[0]) * 0.707
                                 # Add both samples
-                                sum = leader_sample + follower_sample
+                                sum = int(leader_sample + follower_sample)
                                 # Clamp to prevent integer overflow
                                 if sum > 32767:
                                     sum = 32767
