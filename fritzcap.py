@@ -162,7 +162,7 @@ if __name__ == '__main__':
                 "protocol": "http",
                 "cap_folder": "captures/%(tcaps.Y-m-d/HMS)/",
                 "cap_file": "capture.cap",
-                "cap_interface": " ", # needs to be a space as empty string fails with `TypeError: cannot concatenate 'str' and 'NoneType' objects`
+                "cap_interface": "",
                 "after_capture_time": 10,
                 "decode_workers_count": 2,
                 "after_capture_time": 10,

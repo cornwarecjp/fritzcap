@@ -76,6 +76,10 @@ class CaptureMonitor(ExceptionLoggingThread):
         self.after_capture_time = after_capture_time
         self.SID = ''
 
+        #In case None is passed to us, we want to use the empty string:
+        if not self.cap_interface:
+            self.cap_interface = ''
+
         self.base_url = self.protocol + '://' + self.box_name
 
         self.wait_condition = threading.Condition()
